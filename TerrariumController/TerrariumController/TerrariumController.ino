@@ -8,6 +8,8 @@
 #include "DisplayManager.h"
 #include "ActuatorControl.h"
 #include "Animations.h"
+#include "RTCManager.h"
+#include "DigitalClock.h" // Include the DigitalClock module
 
 #define SDA_PIN     5
 #define SCL_PIN     6
@@ -21,12 +23,14 @@ struct Mode {
 };
 
 Mode modes[] = {
+  { drawDigitalClock, 10000 },
   { drawVineAnimation, 9000 },
   { drawScrollStats, 10000 },
   { drawBloomAnimation, 3000 },
   { drawStatusScreen, 10000 },
   { drawBloomAnimation, 3000 },
   { drawSensorOverlayVine, 10000 },
+  { drawBloomAnimation, 3000 }
 };
 
 const int MODE_COUNT = sizeof(modes) / sizeof(Mode);
@@ -34,11 +38,22 @@ int currentMode = 0;
 unsigned long modeStart = 0;
 
 void setup() {
-  Wire.begin(SDA_PIN, SCL_PIN);
-  initDisplay();
-  initSensors();
-  initActuators();
-  modeStart = millis();
+    Serial.begin(9600); // Start serial communication
+    Serial.println("Setup started..."); // Debug message
+
+    Wire.begin(SDA_PIN, SCL_PIN);
+
+    initDisplay();
+    initSensors();
+    initActuators();
+
+    Serial.println("Calling RTC initialization..."); // Debug message
+    rtc.initRTC(); // Initialize RTC
+    Serial.println("RTC initialization finished."); // Debug message
+    rtc.printCurrentTime(); // Print current time to serial
+
+    modeStart = millis();
+    Serial.println("Setup complete."); // Debug message
 }
 
 void loop() {

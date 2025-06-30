@@ -17,87 +17,93 @@ void initDisplay() {
 
 
 void drawScrollStats() {
-  static int scrollOffset = 0;
-  const int itemHeight = 3 * 8 + 4; // Height of each item
-  const int gap = 4;                // Gap between items
-  const int topFixedHeight = 4 * 8; // Fixed top portion height
-  const int scrollAreaHeight = display.height() - topFixedHeight;
-  const int totalHeight = ITEM_COUNT * (itemHeight + gap);
+    display.setTextSize(1); // Explicitly set text size for scroll stats
+    display.setTextColor(SSD1306_WHITE); // Explicitly set text color
 
-  // Update scroll offset
-  scrollOffset += SCROLL_SPEED;
-  if (scrollOffset >= totalHeight + scrollAreaHeight) {
-    scrollOffset = -scrollAreaHeight;
-  }
+    static int scrollOffset = 0;
+    const int itemHeight = 3 * 8 + 4; // Height of each item
+    const int gap = 4;                // Gap between items
+    const int topFixedHeight = 4 * 8; // Fixed top portion height
+    const int scrollAreaHeight = display.height() - topFixedHeight;
+    const int totalHeight = ITEM_COUNT * (itemHeight + gap);
 
-  // Clear display
-  display.clearDisplay();
-
-  // Draw fixed top portion
-  display.setCursor(0, 0);
-  display.print("Temp:");
-  display.setCursor(0, 8);
-  display.print(String((int)tempF) + "F");
-  display.setCursor(0, 16);
-  display.print("Hum:");
-  display.setCursor(0, 24);
-  display.print(String((int)hum) + "%");
-
-  // Draw scrolling items
-  const int scrollY = topFixedHeight; // Start of scroll area
-  for (int i = 0; i < ITEM_COUNT; i++) {
-    int y = items[i].baseY - scrollOffset + scrollY;
-
-    // Skip items outside the scroll area
-    if (y < scrollY || y + itemHeight > scrollY + scrollAreaHeight) {
-      continue;
+    // Update scroll offset
+    scrollOffset += SCROLL_SPEED;
+    if (scrollOffset >= totalHeight + scrollAreaHeight) {
+        scrollOffset = -scrollAreaHeight;
     }
 
-    display.setCursor(0, y);
-    display.print(items[i].l1);
-    display.setCursor(0, y + 8);
-    display.print(items[i].l2);
-    display.setCursor(0, y + 16);
-    display.print(items[i].l3);
-  }
+    // Clear display
+    display.clearDisplay();
 
-  // Display the updated content
-  display.display();
+    // Draw fixed top portion
+    display.setCursor(0, 0);
+    display.print("Temp:");
+    display.setCursor(0, 8);
+    display.print(String((int)tempF) + "F");
+    display.setCursor(0, 16);
+    display.print("Hum:");
+    display.setCursor(0, 24);
+    display.print(String((int)hum) + "%");
+
+    // Draw scrolling items
+    const int scrollY = topFixedHeight; // Start of scroll area
+    for (int i = 0; i < ITEM_COUNT; i++) {
+        int y = items[i].baseY - scrollOffset + scrollY;
+
+        // Skip items outside the scroll area
+        if (y < scrollY || y + itemHeight > scrollY + scrollAreaHeight) {
+            continue;
+        }
+
+        display.setCursor(0, y);
+        display.print(items[i].l1);
+        display.setCursor(0, y + 8);
+        display.print(items[i].l2);
+        display.setCursor(0, y + 16);
+        display.print(items[i].l3);
+    }
+
+    // Display the updated content
+    display.display();
 }
 
 void drawStatusScreen() {
-  display.clearDisplay();
+    display.setTextSize(1); // Explicitly set text size for status screen
+    display.setTextColor(SSD1306_WHITE); // Explicitly set text color
 
-  // Top third: Temp
-  display.setCursor(0, 0);
-  display.print("Temp");
-  display.setCursor(0, 8);
-  display.print((int)tempF); display.print("F");
+    display.clearDisplay();
 
-  // Middle third: Humidity
-  display.setCursor(0, 24);
-  display.print("Humid");
-  display.setCursor(0, 32);
-  display.print((int)hum); display.print("%");
+    // Top third: Temp
+    display.setCursor(0, 0);
+    display.print("Temp");
+    display.setCursor(0, 8);
+    display.print((int)tempF); display.print("F");
 
-  // Bottom third: Water & Light
-  unsigned long now = millis();
+    // Middle third: Humidity
+    display.setCursor(0, 24);
+    display.print("Humid");
+    display.setCursor(0, 32);
+    display.print((int)hum); display.print("%");
 
-  unsigned long nextWater = WATER_INTERVAL - (now - lastWaterTime);
-  int waterSecs = max(int(nextWater / 1000), 0);
-  display.setCursor(0, 48);
-  display.print("Water");
-  display.setCursor(0, 56);
-  display.print(waterSecs); display.print("s");
+    // Bottom third: Water & Light
+    unsigned long now = millis();
 
-  unsigned long nextLight = LIGHT_INTERVAL - (now - lastLightTime);
-  int lightSecs = max(int(nextLight / 1000), 0);
-  display.setCursor(0, 70);
-  display.print("Light");
-  display.setCursor(0, 80);
-  display.print(lightSecs); display.print("s");
+    unsigned long nextWater = WATER_INTERVAL - (now - lastWaterTime);
+    int waterSecs = max(int(nextWater / 1000), 0);
+    display.setCursor(0, 48);
+    display.print("Water");
+    display.setCursor(0, 56);
+    display.print(waterSecs); display.print("s");
 
-  display.display();
+    unsigned long nextLight = LIGHT_INTERVAL - (now - lastLightTime);
+    int lightSecs = max(int(nextLight / 1000), 0);
+    display.setCursor(0, 70);
+    display.print("Light");
+    display.setCursor(0, 80);
+    display.print(lightSecs); display.print("s");
+
+    display.display();
 }
 
 void drawSensorOverlayVine() {
