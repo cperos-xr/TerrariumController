@@ -1,0 +1,198 @@
+// Terrarium Controller V1 - Modular Scheduler
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_AHTX0.h>
+
+#include "SensorManager.h"
+#include "DisplayManager.h"
+#include "ActuatorControl.h"
+#include "Animations.h"
+
+#define SDA_PIN     5
+#define SCL_PIN     6
+
+unsigned long lastFrame = 0;
+const unsigned long FRAME_INTERVAL = 30; // ~33 FPS
+
+struct Mode {
+  void (*func)();
+  unsigned long duration;
+};
+
+Mode modes[] = {
+  { playAnimation2, 3000 },
+  { drawScrollStats, 10000 },
+  { drawVine, 3000 },
+  { drawStatusScreen, 10000 },
+  { playAnimation3, 3000 },
+  { drawSensorOverlayVine, 10000 },
+};
+
+const int MODE_COUNT = sizeof(modes) / sizeof(Mode);
+int currentMode = 0;
+unsigned long modeStart = 0;
+
+void setup() {
+  Wire.begin(SDA_PIN, SCL_PIN);
+  initDisplay();
+  initSensors();
+  initActuators();
+  modeStart = millis();
+}
+
+void loop() {
+  unsigned long now = millis();
+
+  updateActuators();
+  if (now - lastSensorRead >= SENSOR_INTERVAL) {
+    readSensors();
+  }
+
+  if (now - lastFrame >= FRAME_INTERVAL) {
+    lastFrame = now;
+    display.clearDisplay();
+    modes[currentMode].func();
+    display.display();
+  }
+
+  if (now - modeStart >= modes[currentMode].duration) {
+    currentMode = (currentMode + 1) % MODE_COUNT;
+    modeStart = now;
+  }
+}
+
+// ---- SensorManager.h ----
+#ifndef SENSOR_MANAGER_H
+#define SENSOR_MANAGER_H
+#include <Adafruit_AHTX0.h>
+extern Adafruit_AHTX0 aht;
+extern float tempF, hum;
+extern unsigned long lastSensorRead;
+#define SENSOR_INTERVAL 3000
+void initSensors();
+void readSensors();
+#endif
+
+// ---- SensorManager.cpp ----
+#include "SensorManager.h"
+Adafruit_AHTX0 aht;
+float tempF = 0, hum = 0;
+unsigned long lastSensorRead = 0;
+void initSensors() {
+  if (!aht.begin()) while (1);
+}
+void readSensors() {
+  sensors_event_t h, t;
+  aht.getEvent(&h, &t);
+  hum = h.relative_humidity;
+  tempF = t.temperature * 9.0 / 5.0 + 32.0;
+  lastSensorRead = millis();
+}
+
+// ---- DisplayManager.h ----
+#ifndef DISPLAY_MANAGER_H
+#define DISPLAY_MANAGER_H
+#include <Adafruit_SSD1306.h>
+extern Adafruit_SSD1306 display;
+void initDisplay();
+void drawScrollStats();
+void drawStatusScreen();
+void drawSensorOverlayVine();
+#endif
+
+// ---- DisplayManager.cpp ----
+#include "DisplayManager.h"
+#include "SensorManager.h"
+Adafruit_SSD1306 display(128, 32, &Wire, -1);
+void initDisplay() {
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setRotation(3);
+  display.clearDisplay();
+  display.display();
+}
+void drawScrollStats() {
+  display.setCursor(0, 0); display.print("WeekHi:"); display.print(tempF);
+  display.setCursor(0, 8); display.print("WeekLo:"); display.print(hum);
+  display.setCursor(0, 16); display.print("DailyHi:"); display.print(tempF);
+  display.setCursor(0, 24); display.print("DailyLo:"); display.print(hum);
+}
+void drawStatusScreen() {
+  display.setCursor(0, 0); display.print("Temp");
+  display.setCursor(0, 8); display.print((int)tempF); display.print("F");
+  display.setCursor(0, 16); display.print("Hum");
+  display.setCursor(0, 24); display.print((int)hum); display.print("%");
+}
+void drawSensorOverlayVine() {
+  drawStatusScreen(); // placeholder combo for now
+}
+
+// ---- ActuatorControl.h ----
+#ifndef ACTUATOR_CONTROL_H
+#define ACTUATOR_CONTROL_H
+void initActuators();
+void updateActuators();
+#endif
+
+// ---- ActuatorControl.cpp ----
+#include <Arduino.h>
+#include "ActuatorControl.h"
+#define PIN_LIGHT 3
+#define PIN_WATER 4
+unsigned long lastLightTime = 0, lastWaterTime = 0;
+bool lightOn = false, waterOn = false;
+const unsigned long LIGHT_DURATION = 5000;
+const unsigned long WATER_DURATION = 3000;
+const unsigned long LIGHT_INTERVAL = 10000;
+const unsigned long WATER_INTERVAL = 6000;
+void initActuators() {
+  pinMode(PIN_LIGHT, OUTPUT);
+  pinMode(PIN_WATER, OUTPUT);
+  digitalWrite(PIN_LIGHT, LOW);
+  digitalWrite(PIN_WATER, LOW);
+}
+void updateActuators() {
+  unsigned long now = millis();
+  if (!lightOn && now - lastLightTime >= LIGHT_INTERVAL) {
+    lightOn = true; lastLightTime = now;
+    digitalWrite(PIN_LIGHT, HIGH);
+  }
+  if (lightOn && now - lastLightTime >= LIGHT_DURATION) {
+    lightOn = false;
+    digitalWrite(PIN_LIGHT, LOW);
+  }
+  if (!waterOn && now - lastWaterTime >= WATER_INTERVAL) {
+    waterOn = true; lastWaterTime = now;
+    digitalWrite(PIN_WATER, HIGH);
+  }
+  if (waterOn && now - lastWaterTime >= WATER_DURATION) {
+    waterOn = false;
+    digitalWrite(PIN_WATER, LOW);
+  }
+}
+
+// ---- Animations.h ----
+#ifndef ANIMATIONS_H
+#define ANIMATIONS_H
+void playAnimation2();
+void playAnimation3();
+void drawVine();
+#endif
+
+// ---- Animations.cpp ----
+#include "Animations.h"
+#include "DisplayManager.h"
+void playAnimation2() {
+  display.setCursor(0, 0); display.print("Anim2...");
+}
+void playAnimation3() {
+  display.setCursor(0, 0); display.print("Anim3...");
+}
+void drawVine() {
+  for (int x = 0; x < 128; x += 4) {
+    int y = 16 + 8 * sin(0.1 * x);
+    display.drawPixel(x, y, SSD1306_WHITE);
+  }
+}
