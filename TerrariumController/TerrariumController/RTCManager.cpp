@@ -5,6 +5,11 @@ RTCManager rtc; // Define the global RTCManager instance
 
 RTCManager::RTCManager() {}
 
+bool RTCManager::isRTCAvailable() {
+    Wire.beginTransmission(RTC_ADDRESS);
+    return (Wire.endTransmission() == 0); // Return true if RTC responds
+}
+
 void RTCManager::initRTC() {
     if (!rtc.begin()) {
         Serial.println("❌ RTC not found!");
