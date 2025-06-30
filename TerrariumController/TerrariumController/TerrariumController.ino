@@ -21,11 +21,11 @@ struct Mode {
 };
 
 Mode modes[] = {
-  { playAnimation2, 3000 },
+  { drawVine, 9000 },
   { drawScrollStats, 10000 },
-  { drawVine, 3000 },
+  { playAnimation2, 3000 },
   { drawStatusScreen, 10000 },
-  { playAnimation3, 3000 },
+  { playAnimation2, 3000 },
   { drawSensorOverlayVine, 10000 },
 };
 

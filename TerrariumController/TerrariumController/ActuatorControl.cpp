@@ -5,10 +5,10 @@
 #define PIN_WATER 4
 unsigned long lastLightTime = 0, lastWaterTime = 0;
 bool lightOn = false, waterOn = false;
-const unsigned long LIGHT_DURATION = 5000;
-const unsigned long WATER_DURATION = 3000;
-const unsigned long LIGHT_INTERVAL = 10000;
-const unsigned long WATER_INTERVAL = 6000;
+const unsigned long LIGHT_DURATION = 10000; // 10 seconds
+const unsigned long WATER_DURATION = 10000; // 10 seconds
+const unsigned long LIGHT_INTERVAL = 60000; // 1 minute
+const unsigned long WATER_INTERVAL = 60000; // 1 minute
 void initActuators() {
   pinMode(PIN_LIGHT, OUTPUT);
   pinMode(PIN_WATER, OUTPUT);

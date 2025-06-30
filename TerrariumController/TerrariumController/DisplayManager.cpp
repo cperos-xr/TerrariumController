@@ -76,7 +76,7 @@ void drawStatusScreen() {
 
   // Middle third: Humidity
   display.setCursor(0, 24);
-  display.print("Hum");
+  display.print("Humid");
   display.setCursor(0, 32);
   display.print((int)hum); display.print("%");
 
@@ -86,14 +86,14 @@ void drawStatusScreen() {
   unsigned long nextWater = WATER_INTERVAL - (now - lastWaterTime);
   int waterSecs = max(int(nextWater / 1000), 0);
   display.setCursor(0, 48);
-  display.print("Wtr");
+  display.print("Water");
   display.setCursor(0, 56);
   display.print(waterSecs); display.print("s");
 
   unsigned long nextLight = LIGHT_INTERVAL - (now - lastLightTime);
   int lightSecs = max(int(nextLight / 1000), 0);
   display.setCursor(0, 70);
-  display.print("Lgt");
+  display.print("Light");
   display.setCursor(0, 80);
   display.print(lightSecs); display.print("s");
 
