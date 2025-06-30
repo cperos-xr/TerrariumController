@@ -15,7 +15,7 @@ static int16_t by = (SCREEN_H - BOX_H) / 2;
 static int8_t  vx2 = 1, vy2 = 3;
 static float   angle = 0, dAngle = 0.1;
 
-void bloomAnimation() {
+void drawBloomAnimation() {
   // draw bloom
   int16_t cx = bx + RADIUS;
   int16_t cy = by + RADIUS;
@@ -69,7 +69,7 @@ void rainAnimation() {
   }
 }
 
-void vineAnimation() {
+void drawVineAnimation() {
   static float phase = 0; // Phase for sine wave
   const float waveFreq = 2 * PI / 128; // Frequency adjusted for vertical movement
   const int amplitude = 6; // Amplitude for horizontal oscillation
