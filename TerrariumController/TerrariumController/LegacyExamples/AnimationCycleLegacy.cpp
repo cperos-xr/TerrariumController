@@ -80,7 +80,7 @@ void setup() {
   }
 }
 
-void drawVine() {
+void vineAnimation() {
   // line
   int px=0, py=SCREEN_H/2 + sin(phase)*amplitude;
   for(int x=4;x<SCREEN_W;x+=4){
@@ -194,7 +194,7 @@ void loop(){
   int mode = ((now - startTime)/MODE_TIME)%3;
 
   switch(mode){
-    case 0: drawVine();      break;
+    case 0: vineAnimation();      break;
     case 1:
       for(auto &u: umbrellas) drawUmbrella(u), u.x+=u.vx, u.y+=u.vy,
         (u.x<=0||u.x>=SCREEN_W-IW)?(u.vx=-u.vx, u.x+=u.vx):0,

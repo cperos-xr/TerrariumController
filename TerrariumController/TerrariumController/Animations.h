@@ -7,8 +7,8 @@
 #define SCREEN_W 32
 #define SCREEN_H 128
 
-void playAnimation2();
-void playAnimation3();
-void drawVine();
+void bloomAnimation();
+void rainAnimation();
+void vineAnimation();
 
 #endif  // ANIMATIONS_H

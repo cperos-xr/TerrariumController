@@ -15,7 +15,7 @@ static int16_t by = (SCREEN_H - BOX_H) / 2;
 static int8_t  vx2 = 1, vy2 = 3;
 static float   angle = 0, dAngle = 0.1;
 
-void playAnimation2() {
+void bloomAnimation() {
   // draw bloom
   int16_t cx = bx + RADIUS;
   int16_t cy = by + RADIUS;
@@ -37,7 +37,7 @@ void playAnimation2() {
   if (angle > TWO_PI) angle -= TWO_PI;
 }
 
-void playAnimation3() {
+void rainAnimation() {
   // Umbrella + Gentle Rain (legacy style placeholder)
   struct Umb { int16_t x,y; int8_t vx,vy; };
   static Umb umbrellas[3];
@@ -69,7 +69,7 @@ void playAnimation3() {
   }
 }
 
-void drawVine() {
+void vineAnimation() {
   static float phase = 0; // Phase for sine wave
   const float waveFreq = 2 * PI / 128; // Frequency adjusted for vertical movement
   const int amplitude = 6; // Amplitude for horizontal oscillation
@@ -116,7 +116,7 @@ void drawVine() {
   }
 
   // Draw alternating hearts as leaves
-  float panOffset = (millis() / 50.0); // Use float for smoother movement
+  float panOffset = fmod(millis() / 50.0, numLeaves * spacing); // Use modulo to keep positions within bounds
   
   for (int i = 0; i < numLeaves; i++) {
     // Calculate leaf position with smooth panning
@@ -135,9 +135,6 @@ void drawVine() {
       int sign = (i % 2 == 0) ? 1 : -1; // Alternate left/right
       int hx = vx + sign * (leafSize / 2 + 2); // Reduced offset - closer to vine
       int hy = sy;
-
-      // Optional: Remove or adjust this line if hearts disappear at edges
-      // if (hx < leafSize/2 || hx > 32 - leafSize/2) continue;
 
       if (sign > 0) {
         // Heart pointing right (for right side)
