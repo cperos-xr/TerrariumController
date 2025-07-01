@@ -9,4 +9,8 @@ extern unsigned long lastLightTime, lastWaterTime;
 extern const unsigned long LIGHT_DURATION, WATER_DURATION;
 extern const unsigned long LIGHT_INTERVAL, WATER_INTERVAL;
 
+// Declare pin definitions as extern
+extern const int PIN_LIGHT;
+extern const int PIN_WATER;
+
 #endif

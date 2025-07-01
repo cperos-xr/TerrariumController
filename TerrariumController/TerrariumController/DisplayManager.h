@@ -2,8 +2,10 @@
 #define DISPLAY_MANAGER_H
 
 #include <Adafruit_SSD1306.h>
+#include "TaskScheduler.h"
 
 extern Adafruit_SSD1306 display;
+extern TaskScheduler scheduler; // Declare the global TaskScheduler instance
 
 #define ITEM_COUNT 15
 #define SCROLL_SPEED 1

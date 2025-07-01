@@ -2,9 +2,16 @@
 #include "DisplayManager.h"
 #include "SensorManager.h"
 #include "ActuatorControl.h"
-
+#include "RTCManager.h"
+#include "TaskScheduler.h"
+extern TaskScheduler scheduler; // Declare the global TaskScheduler instance
+extern RTCManager rtc; 
+String getFrequencyString(TaskFrequency frequency);
+String getNextScheduledTime(const Task* task);
 Adafruit_SSD1306 display(128, 32, &Wire, -1);
 DisplayItem items[ITEM_COUNT];
+
+
 
 void initDisplay() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
@@ -14,7 +21,6 @@ void initDisplay() {
   display.clearDisplay();
   display.display();
 }
-
 
 void drawScrollStats() {
     display.setTextSize(1); // Explicitly set text size for scroll stats
@@ -38,11 +44,11 @@ void drawScrollStats() {
 
     // Draw fixed top portion
     display.setCursor(0, 0);
-    display.print("Temp:");
+    display.print("Temp");
     display.setCursor(0, 8);
     display.print(String((int)tempF) + "F");
     display.setCursor(0, 16);
-    display.print("Hum:");
+    display.print("Humid");
     display.setCursor(0, 24);
     display.print(String((int)hum) + "%");
 
@@ -89,19 +95,46 @@ void drawStatusScreen() {
     // Bottom third: Water & Light
     unsigned long now = millis();
 
-    unsigned long nextWater = WATER_INTERVAL - (now - lastWaterTime);
-    int waterSecs = max(int(nextWater / 1000), 0);
-    display.setCursor(0, 48);
-    display.print("Water");
-    display.setCursor(0, 56);
-    display.print(waterSecs); display.print("s");
+    if (rtc.isRTCAvailable()) {
+        // RTC is available, use TaskScheduler for display
+        const Task* lightTask = scheduler.getTaskByName("Light");
+        const Task* waterTask = scheduler.getTaskByName("Water");
 
-    unsigned long nextLight = LIGHT_INTERVAL - (now - lastLightTime);
-    int lightSecs = max(int(nextLight / 1000), 0);
-    display.setCursor(0, 70);
-    display.print("Light");
-    display.setCursor(0, 80);
-    display.print(lightSecs); display.print("s");
+        // Display Light Task
+        display.setCursor(0, 48);
+        display.print("Light");
+        display.setCursor(0, 56);
+        if (lightTask) {
+            display.print(getFrequencyString(lightTask->frequency));
+        } else {
+            display.print("None");
+        }
+
+        // Display Water Task
+        display.setCursor(0, 72);
+        display.print("Water");
+        display.setCursor(0, 80);
+        if (waterTask) {
+            display.print(getFrequencyString(waterTask->frequency));
+        } else {
+            display.print("None");
+        }
+    } else {
+        // RTC is not available, fallback to default values
+        unsigned long nextWater = WATER_INTERVAL - (now - lastWaterTime);
+        int waterSecs = max(int(nextWater / 1000), 0);
+        display.setCursor(0, 48);
+        display.print("Water");
+        display.setCursor(0, 56);
+        display.print(waterSecs); display.print("s");
+
+        unsigned long nextLight = LIGHT_INTERVAL - (now - lastLightTime);
+        int lightSecs = max(int(nextLight / 1000), 0);
+        display.setCursor(0, 72);
+        display.print("Light");
+        display.setCursor(0, 80);
+        display.print(lightSecs); display.print("s");
+    }
 
     display.display();
 }
@@ -111,32 +144,45 @@ void drawSensorOverlayVine() {
 }
 
 void updateItems() {
-  // Live temperature with warning if out of range
-  String temp = String((int)tempF) + "F";
-  if (tempF < TLOW_WARN || tempF > THIGH_WARN) temp = "!" + temp;
-  items[0] = {"Temp", temp, ""};
+    // Live temperature with warning if out of range
+    String temp = String((int)tempF) + "F";
+    if (tempF < TLOW_WARN || tempF > THIGH_WARN) temp = "!" + temp;
+    items[0] = {"Temp", temp, ""};
 
-  // Rolling temperature stats
-  items[1] = {"Day", "Max", String((int)dailyHi) + "F"};
-  items[2] = {"Day", "Min", String((int)dailyLo) + "F"};
-  items[3] = {"Week", "Max", String((int)weeklyHi) + "F"};
-  items[4] = {"Week", "Min", String((int)weeklyLo) + "F"};
+    // Rolling temperature stats
+    items[1] = {"Day", "Max", String((int)dailyHi) + "F"};
+    items[2] = {"Day", "Min", String((int)dailyLo) + "F"};
+    items[3] = {"Week", "Max", String((int)weeklyHi) + "F"};
+    items[4] = {"Week", "Min", String((int)weeklyLo) + "F"};
 
-  // Live humidity with warning if out of range
-  String humStr = String((int)hum) + "%";
-  if (hum < HLOW_WARN || hum > HHIGH_WARN) humStr = "!" + humStr;
-  items[5] = {"Hum", humStr, ""};
+    // Live humidity with warning if out of range
+    String humStr = String((int)hum) + "%";
+    if (hum < HLOW_WARN || hum > HHIGH_WARN) humStr = "!" + humStr;
+    items[5] = {"Hum", humStr, ""};
 
-  // Rolling humidity stats
-  items[6] = {"Day", "Max", String((int)dailyHumHi) + "%"};
-  items[7] = {"Day", "Min", String((int)dailyHumLo) + "%"};
-  items[8] = {"Week", "Max", String((int)weeklyHumHi) + "%"};
-  items[9] = {"Week", "Min", String((int)weeklyHumLo) + "%"};
+    // Rolling humidity stats
+    items[6] = {"Day", "Max", String((int)dailyHumHi) + "%"};
+    items[7] = {"Day", "Min", String((int)dailyHumLo) + "%"};
+    items[8] = {"Week", "Max", String((int)weeklyHumHi) + "%"};
+    items[9] = {"Week", "Min", String((int)weeklyHumLo) + "%"};
 
-  // Compute Y positions for scrolling
-  const int itemHeight = 3 * 8 + 4;
-  const int gap = 4;
-  for (int i = 0; i < ITEM_COUNT; i++) {
-    items[i].baseY = i * (itemHeight + gap);
-  }
+    // Compute Y positions for scrolling
+    const int itemHeight = 3 * 8 + 4;
+    const int gap = 4;
+    for (int i = 0; i < ITEM_COUNT; i++) {
+        items[i].baseY = i * (itemHeight + gap);
+    }
+}
+
+String getFrequencyString(TaskFrequency frequency) {
+    switch (frequency) {
+        case ALWAYS_ON: return "AllOn";
+        case DAILY: return "Daily";
+        case TWICE_DAILY: return "2xDay";
+        case WEEKLY: return "Weekly";
+        case TWICE_WEEKLY: return "2xWeek";
+        case MONTHLY: return "Month";
+        case TWICE_MONTHLY: return "2xMonth";
+        default: return "N/A";
+    }
 }
