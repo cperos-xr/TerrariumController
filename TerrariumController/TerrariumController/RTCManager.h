@@ -10,10 +10,11 @@ class RTCManager {
 public:
     RTCManager();
     void initRTC();
-    void printCurrentTime();
+    void printCurrentTime(); // Add this method declaration
     void adjustToCompileTime(); // Adjust RTC to compile time if power is lost
-    DateTime getCurrentTime(); // New method to get the current time
-    bool isRTCAvailable(); // New method to detect RTC availability
+    DateTime getCurrentTime(); // Method to get the current time
+    bool isRTCAvailable(); // Method to detect RTC availability
+    void setDateTime(int year, int month, int day, int hour, int minute, int second);
 
 private:
     RTC_DS3231 rtc; // RTC object from RTClib

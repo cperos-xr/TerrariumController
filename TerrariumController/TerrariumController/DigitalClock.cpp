@@ -1,62 +1,59 @@
 #include "DigitalClock.h"
 #include "RTCManager.h" // Include RTCManager for the `rtc` object
 #include "DisplayManager.h" // Include DisplayManager for the `display` object
+#include "Fonts/DSEG14/DSEG14Classic_Regular8pt7b.h" // Include the segmented LED font
 
 void drawDigitalClock() {
-    DateTime now = rtc.getCurrentTime(); // Use the public method to get the current time
+    DateTime now = rtc.getCurrentTime(); // Get current time
 
     // Clear the display
     display.clearDisplay();
 
-    char hourBuf[4]; // HH
-    sprintf(hourBuf, "%02d", now.hour()); // Format hour as two digits
+    // Format time and date
+    char hourBuf[3]; // HH
+    sprintf(hourBuf, "%02d", now.hour());
 
     char minuteBuf[3]; // MM
-    sprintf(minuteBuf, "%02d", now.minute()); // Format minute as two digits
+    sprintf(minuteBuf, "%02d", now.minute());
 
     char secondBuf[3]; // SS
-    sprintf(secondBuf, "%02d", now.second()); // Format second as two digits
+    sprintf(secondBuf, "%02d", now.second());
 
-    char monthBuf[10]; // Month name
-    sprintf(monthBuf, "June"); // Hardcoded for now, replace with dynamic month name if needed
+    char monthBuf[3]; // MM
+    sprintf(monthBuf, "%02d", now.month());
 
-    char monthDigitBuf[3]; // Month as two-digit number
-    sprintf(monthDigitBuf, "%02d", now.month());
-
-    char dayBuf[3]; // Day of the month
+    char dayBuf[3]; // DD
     sprintf(dayBuf, "%02d", now.day());
 
-    char yearBuf[5]; // Year
+    char yearBuf[5]; // YYYY
     sprintf(yearBuf, "%04d", now.year());
 
-    // Display the time and date
-    display.setTextSize(2); // Set text size for big text
-    display.setTextColor(SSD1306_WHITE); // Set text color
+    // Set the segmented LED font
+    display.setFont(&DSEG14Classic_Regular8pt7b);
+    display.setTextColor(SSD1306_WHITE); // White text
 
-    // Row 1: Time
-    display.setCursor(0, 0); // Top row
-    display.println(hourBuf); // Print time
+    // Display the time
+    display.setTextSize(1); // Text size is controlled by the font
+    display.setCursor(0, 16); // Top row
+    display.println(hourBuf);
 
-    // Row 2: Date
-    display.setCursor(0, 24); // Second row
-    display.println(minuteBuf); // Print date
+    display.setCursor(0, 48); // Middle row
+    display.println(minuteBuf);
 
-    display.setCursor(0, 48); // Second row, right side
-    display.println(secondBuf); // Print second
-    
+    display.setCursor(0, 80); // Bottom row
+    display.println(secondBuf);
 
-    // Row 3: Month
-    display.setTextSize(1); // Smaller text for month
-    display.setCursor(8, 98); // Third row
-    display.println(monthDigitBuf); // Print month
+    // Display the date
+    display.setFont(NULL); // Reset to default font for the date
+    display.setTextSize(1); // Smaller text for date
+    display.setCursor(8, 104); // Sixth row
+    display.println(monthBuf);
 
-    // Row 4: Day
-    display.setCursor(8, 106); // Fourth row
-    display.println(dayBuf); // Print day
+    display.setCursor(8, 112); // Seventh row
+    display.println(dayBuf);
 
-    // Row 5: Year
-    display.setCursor(0, 114); // Fifth row
-    display.println(yearBuf); // Print year
+    display.setCursor(0, 120); // Eighth row
+    display.println(yearBuf);
 
     // Update the display
     display.display();

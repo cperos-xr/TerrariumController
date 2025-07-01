@@ -11,6 +11,7 @@
 #include "RTCManager.h"
 #include "DigitalClock.h" // Include the DigitalClock module
 #include "TaskScheduler.h"
+#include "BluetoothManager.h"
 
 #define SDA_PIN     5
 #define SCL_PIN     6
@@ -41,7 +42,7 @@ Mode modesWithoutClock[] = {
   { drawBloomAnimation, 3000 },
   { drawStatusScreen, 10000 },
   { drawBloomAnimation, 3000 },
-  { drawSensorOverlayVine, 10000 },
+  { drawSensorOverlayVine, 10000 }, // TODO : Implement this or remove it - currently not working
   { drawBloomAnimation, 3000 }
 };
 
@@ -53,6 +54,7 @@ int currentMode = 0;
 unsigned long modeStart = 0;
 
 TaskScheduler scheduler;
+BluetoothManager bluetooth;
 
 void setup() {
     Serial.begin(9600); // Start serial communication
@@ -82,6 +84,7 @@ void setup() {
     }
 
     scheduler.initializeTasks(); // Initialize tasks based on RTC availability
+    bluetooth.initBLE(); // Initialize Bluetooth
 
     modeStart = millis();
     Serial.println("Setup complete."); // Debug message
@@ -92,7 +95,7 @@ void loop() {
 
     // Update sensors and items periodically
     if (now - lastSensorRead >= SENSOR_INTERVAL) {
-        readSensors();    // Update sensor readings
+        readSensors();    // Update sensor readings and reset stats if needed
         updateItems();    // Refresh items array with updated stats
         lastSensorRead = now;
     }

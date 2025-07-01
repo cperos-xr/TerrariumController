@@ -121,8 +121,8 @@ void TaskScheduler::updateTasks(DateTime now) {
 }
 
 void TaskScheduler::executeTask(const Task& task) {
-    Serial.print("Executing task: ");
-    Serial.println(task.name);
+    //Serial.print("Executing task: ");
+    //Serial.println(task.name);
 
     if (strcmp(task.name, "Light") == 0) {
         if (task.frequency == ALWAYS_ON) {
@@ -145,6 +145,19 @@ void TaskScheduler::executeTask(const Task& task) {
             digitalWrite(PIN_WATER, LOW); // Turn off the pump
         }
     }
+}
+
+void TaskScheduler::updateActuators() {
+    // Example fallback logic for actuators
+    Serial.println("Fallback: Updating actuators without RTC.");
+
+    // Turn on the light continuously
+    digitalWrite(PIN_LIGHT, HIGH);
+
+    // Turn on the water pump for a default duration
+    digitalWrite(PIN_WATER, HIGH);
+    delay(1000); // Keep the pump on for 1 second
+    digitalWrite(PIN_WATER, LOW);
 }
 
 const Task* TaskScheduler::getTaskByName(const char* name) const {

@@ -12,23 +12,22 @@ bool RTCManager::isRTCAvailable() {
 
 void RTCManager::initRTC() {
     if (!rtc.begin()) {
-        Serial.println("❌ RTC not found!");
-        while (1) { delay(10); } // Halt execution if RTC is not found
-    }
-
-    if (rtc.lostPower()) {
-        Serial.println("⚡ RTC lost power, setting compile time.");
-        adjustToCompileTime();
+        Serial.println("RTC not found!");
+        while (1); // Halt if RTC is not found
     }
 }
 
-void RTCManager::adjustToCompileTime() {
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); // Set RTC to compile time
+DateTime RTCManager::getCurrentTime() {
+    return rtc.now();
+}
+
+void RTCManager::setDateTime(int year, int month, int day, int hour, int minute, int second) {
+    rtc.adjust(DateTime(year, month, day, hour, minute, second));
+    Serial.println("RTC time adjusted.");
 }
 
 void RTCManager::printCurrentTime() {
-    DateTime now = rtc.now(); // Get current time from RTC
-
+    DateTime now = rtc.now();
     Serial.print("Current Time: ");
     Serial.print(now.year());
     Serial.print("-");
@@ -41,8 +40,4 @@ void RTCManager::printCurrentTime() {
     Serial.print(now.minute());
     Serial.print(":");
     Serial.println(now.second());
-}
-
-DateTime RTCManager::getCurrentTime() {
-    return rtc.now(); // Return the current time
 }
