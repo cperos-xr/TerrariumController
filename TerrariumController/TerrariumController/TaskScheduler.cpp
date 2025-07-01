@@ -62,8 +62,28 @@ void TaskScheduler::initializeTasks() {
 }
 
 void TaskScheduler::addTask(const Task& task) {
+    // Check if a task with the same name already exists
+    for (int i = 0; i < taskCount; i++) {
+        if (strcmp(tasks[i].name, task.name) == 0) {
+            // If the existing task is ALWAYS_ON, turn off the actuator
+            if (tasks[i].frequency == ALWAYS_ON) {
+                if (strcmp(task.name, "Light") == 0) {
+                    digitalWrite(PIN_LIGHT, LOW); // Turn off the light
+                } else if (strcmp(task.name, "Water") == 0) {
+                    digitalWrite(PIN_WATER, LOW); // Turn off the water pump
+                }
+            }
+            // Replace the existing task with the new task
+            tasks[i] = task;
+            Serial.printf("TaskScheduler: Updated task '%s'.\n", task.name);
+            return;
+        }
+    }
+
+    // If no existing task is found, add the new task
     if (taskCount < 10) {
         tasks[taskCount++] = task;
+        Serial.printf("TaskScheduler: Added new task '%s'.\n", task.name);
     } else {
         Serial.println("TaskScheduler: Maximum task limit reached!");
     }

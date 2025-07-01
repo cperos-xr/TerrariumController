@@ -105,6 +105,12 @@ void NameWriteCallback::onWrite(BLECharacteristic* pChar) {
     }
 }
 
+// <frequency>,<startHour>,<startMinute>,<duration>,<secondStartHour>,<secondStartMinute>
+// Examples you might send this:
+// ALWAYS_ON,0,0,0
+// DAILY,13,30,3600
+// TWICE_DAILY,10,0,60,14,36
+
 // Callback for Water scheduling
 void WaterWriteCallback::onWrite(BLECharacteristic* pChar) {
     String value = pChar->getValue().c_str();
