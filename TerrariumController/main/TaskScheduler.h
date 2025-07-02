@@ -1,0 +1,31 @@
+/* TaskScheduler.h */
+#ifndef TASKSCHEDULER_H
+#define TASKSCHEDULER_H
+#include <Arduino.h>
+#include <RTClib.h>
+
+enum ScheduleType { NONE, ALWAYS_ON, DAILY, WEEKLY, TWICE_DAILY, TWICE_WEEKLY, MONTHLY, TWICE_MONTHLY };
+
+struct Schedule {
+    ScheduleType type;
+    int hour1, minute1, duration1, hour2, minute2, duration2;
+};
+
+class TaskScheduler {
+public:
+    TaskScheduler(int lightPin, int waterPin);
+    void parseAndSetSchedule(const String& cmd);
+    void updateTasks(const DateTime& now);
+
+private:
+    int lightPin, waterPin;
+    Schedule lightSchedule, waterSchedule;
+    bool lightRunning, waterRunning;
+    unsigned long lightOffMillis, waterOffMillis; // Add these fields
+    void applySchedule(const Schedule&, int, bool&, unsigned long&, const DateTime&);
+    void executeTask(int, int, bool&, unsigned long&);
+    bool matchSchedule(const DateTime&, const Schedule&, bool&);
+    ScheduleType parseType(const String& s);
+};
+
+#endif

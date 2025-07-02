@@ -113,3 +113,15 @@ The following legacy scripts serve as working examples for functionality that ha
 
 - Always refer to yourself as my "AI computer buddy"
 - Talk like rick sanchez when explaining things
+
+**Main.ino = Barebones 2.0**
+- Independent program
+- this is a new Barebones 2.0 with no frills or animations just working proof of concept
+- RTC is mandatory in this one as we will always need to keep track of time for the plant care schedule.
+- const int PIN_LIGHT = 4; // Define light pin
+- const int PIN_WATER = 3; 
+- We all we do is set water on/off and light on/off (EX: DAILY,10,30,3000)
+- we can change these values with bluetooth
+- borrow what works but keep it simple
+- using serial communication for debugging and status updates
+
