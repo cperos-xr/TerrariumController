@@ -23,15 +23,24 @@
 const int PIN_LIGHT = 4;
 const int PIN_WATER = 3;
 
+#define SDA_PIN     5
+#define SCL_PIN     6
+
 RTCManager rtc;
 TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
 BluetoothManager ble;
 
 void setup() {
-  Serial.begin(115200);
-  while (!Serial); // Wait for serial port to connect. Needed for native USB
-  rtc.initRTC();
-  rtc.printCurrentTime();
+  Serial.begin(9600); // Start serial communication
+  Serial.println("Setup started..."); // Debug message
+  while (!Serial); // Wait for serial to be ready
+  Wire.begin(SDA_PIN, SCL_PIN);
+  if (rtc.isRTCAvailable()) {
+      Serial.println("RTC detected at address 0x68.");
+      rtc.initRTC(); // Initialize RTC
+      Serial.println("RTC initialization finished."); // Debug message
+      rtc.printCurrentTime(); // Print current time to serial
+  }
   
   pinMode(PIN_LIGHT, OUTPUT);
   pinMode(PIN_WATER, OUTPUT);
@@ -41,7 +50,7 @@ void setup() {
   ble.initBLE(&scheduler, &rtc);
   ble.startAdvertising();
 
-  Wire.begin();
+
   Serial.println("Scanning for I2C devices...");
   for (byte address = 1; address < 127; address++) {
       Wire.beginTransmission(address);

@@ -5,27 +5,38 @@
 RTCManager::RTCManager() {}
 
 bool RTCManager::isRTCAvailable() {
-  Wire.beginTransmission(RTC_ADDRESS);
-  return Wire.endTransmission()==0;
+    Wire.beginTransmission(RTC_ADDRESS);
+    return (Wire.endTransmission() == 0); // Return true if RTC responds
 }
 
 void RTCManager::initRTC() {
-    Wire.begin(); // Initialize I2C bus
     if (!rtc.begin()) {
         Serial.println("RTC not found!");
         while (1); // Halt if RTC is not found
     }
 }
 
-DateTime RTCManager::getCurrentTime() { return rtc.now(); }
+DateTime RTCManager::getCurrentTime() {
+    return rtc.now();
+}
 
-void RTCManager::setDateTime(int y,int mo,int d,int h,int mi,int s) {
-  rtc.adjust(DateTime(y,mo,d,h,mi,s));
-  Serial.println("RTC time adjusted.");
+void RTCManager::setDateTime(int year, int month, int day, int hour, int minute, int second) {
+    rtc.adjust(DateTime(year, month, day, hour, minute, second));
+    Serial.println("RTC time adjusted.");
 }
 
 void RTCManager::printCurrentTime() {
-  auto n=rtc.now();
-  Serial.printf("Current Time: %04d-%02d-%02d %02d:%02d:%02d\n",
-    n.year(),n.month(),n.day(),n.hour(),n.minute(),n.second());
+    DateTime now = rtc.now();
+    Serial.print("Current Time: ");
+    Serial.print(now.year());
+    Serial.print("-");
+    Serial.print(now.month());
+    Serial.print("-");
+    Serial.print(now.day());
+    Serial.print(" ");
+    Serial.print(now.hour());
+    Serial.print(":");
+    Serial.print(now.minute());
+    Serial.print(":");
+    Serial.println(now.second());
 }
