@@ -20,6 +20,7 @@
 #include "TaskScheduler.h"
 #include "BluetoothManager.h"
 #include "DisplayManager.h"
+#include "RecordManager.h"
 
 // Pin definitions
 const int PIN_LIGHT = 4;
@@ -87,8 +88,23 @@ void setup()
 
 void loop() 
 {
-  scheduler.updateTasks(rtc.getCurrentTime());
-  String msg = "Temp\n" + String(snr.getCurrentTempF()) + "F\n" + "Humid\n" + String(snr.getCurrentHumid()) + "%\n";
-  dsp.printMessage(msg);
-  delay(1000);
+    DateTime now = rtc.getCurrentTime();
+    float temp = snr.getCurrentTempF();
+    float humid = snr.getCurrentHumid();
+    
+    if (temp != -1)
+    {
+        rcd.analyzeReading(TEMPERATURE, temp, now);
+    }
+    
+    if (humid != -1)
+    {
+        rcd.analyzeReading(HUMIDITY, humid, now);
+    }
+    
+    scheduler.updateTasks(now);
+    String msg = "Temp\n" + String(temp) + "F\n" + "Humid\n" + String(humid) + "%\n";
+    dsp.printMessage(msg);
+    rcd.printRecords(); // Print records to serial for debugging
+    delay(1000);
 }
