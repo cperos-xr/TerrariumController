@@ -103,7 +103,7 @@ void loop()
     }
     
     scheduler.updateTasks(now);
-    String msg = "Temp\n" + String(temp) + "F\n" + "Humid\n" + String(humid) + "%\n";
+    String msg = "Temp\n" + String(temp, 1) + "F\n\n" + "Humid\n" + String(humid, 1) + "%\n";
     dsp.printMessage(msg);
     rcd.printRecords(); // Print records to serial for debugging
     delay(1000);

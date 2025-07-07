@@ -3,6 +3,18 @@
   "WorkspaceRootPath": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\main.ino||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:main.ino||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\DisplayManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DisplayManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\DisplayManager.cpp||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DisplayManager.cpp||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.cpp||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RecordManager.cpp||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
@@ -17,10 +29,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RTCManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RTCManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\main.ino||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:main.ino||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\BluetoothManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -54,7 +62,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -66,20 +74,46 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
+              "Title": "DisplayManager.h",
+              "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\DisplayManager.h",
+              "RelativeDocumentMoniker": "DisplayManager.h",
+              "ToolTip": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\DisplayManager.h",
+              "RelativeToolTip": "DisplayManager.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-07-07T10:53:28.139Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "DisplayManager.cpp",
+              "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\DisplayManager.cpp",
+              "RelativeDocumentMoniker": "DisplayManager.cpp",
+              "ToolTip": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\DisplayManager.cpp",
+              "RelativeToolTip": "DisplayManager.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-07-07T10:53:18.898Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "RecordManager.cpp",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.cpp",
               "RelativeDocumentMoniker": "RecordManager.cpp",
               "ToolTip": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.cpp",
               "RelativeToolTip": "RecordManager.cpp",
-              "ViewState": "AgIAAJoAAAAAAAAAAAAowMsAAAAWAAAAAAAAAA==",
+              "ViewState": "AgIAANIAAAAAAAAAAAAAAPkAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-07-07T10:45:30.437Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "RecordManager.h",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.h",
               "RelativeDocumentMoniker": "RecordManager.h",
@@ -87,12 +121,11 @@
               "RelativeToolTip": "RecordManager.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T10:00:35.57Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T10:00:35.57Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 10,
               "Title": "SensorManager.h",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\SensorManager.h",
               "RelativeDocumentMoniker": "SensorManager.h",
@@ -104,7 +137,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "SensorManager.cpp",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\SensorManager.cpp",
               "RelativeDocumentMoniker": "SensorManager.cpp",
@@ -112,25 +145,24 @@
               "RelativeToolTip": "SensorManager.cpp",
               "ViewState": "AgIAAJ8AAAAAAAAAAAAAAMgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-07-07T06:44:55.204Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T06:44:55.204Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "main.ino",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\main.ino",
               "RelativeDocumentMoniker": "main.ino",
               "ToolTip": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\main.ino",
               "RelativeToolTip": "main.ino",
-              "ViewState": "AgIAAFEAAAAAAAAAAAAAAFQAAAATAAAAAAAAAA==",
+              "ViewState": "AgIAADwAAAAAAAAAAAAAAE4AAAACAAAAAAAAAA==",
               "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKcSURBVDhPlZM9aJ1lGIav532/JCc1vybHQygkLbE1UaiDhSKoiIsgWCkOFkTt4qq4iJ0Et3ZwLnTooLgqODgJDoI0bY0JBNtFRQ8k7cnJOeZ8Od/3/j4OdZDQFrzgWh7u\u002B94eiTnz\u002BeYWy1OT0/eq6tmgeY5HUIjpzTcamzc7u3uXz5xWufjTGs3xxurdqro0jOlFRRuHS/9FwI3b4voT441P/izLdbmyuTW10e1\u002B0ff\u002BbFY9nH8gIsL06Oj3qzMz5\u002BWDH3586fdy8E2d0qwgh7MPQRk1tlyamDhvOlU1163deN979pxjt67v62p63tHzjl33762u2XOOnvd0nRvrVNW86TvHfoj0faSwlteWFrmwcpLnmk2GMVHGxKm5Od5bOcnrx5ZoFAV9H9kPgb7zmDIEhikyZg0frj7Fk6J0drZ5o9Xkwoll3l4\u002BzlsLLfp3d1gk89HTK0wU9v54CBiXEiFnTs3OkIYHXLl9hxvlAZd\u002B/oVnHjvC81MTXL5xk7\u002BN5cvf/qB/UHJ6dpqQEz4ljMsZVYUYKVNCbEHDe4IIA\u002B8ZOI8fHaPwDlKiDJHsHKqKyxkTUkJU2ex2Ue959egC05OTvHt8iTvtNrfabd45tkgvJV5YaHHEO27d62CAkBN29uy51aT5zSqm4tfuLo\u002BnSAtY397mu06XjXJIPRiwOFKwPxjw9V9tOmIwItmofivLV6\u002BdC6pfAQ1VJaeIpIxaiyksIOSUkBRRBBkpMGIAwojI\u002B0ZD6EkINSEgMWIVjDFYVSREJARszhgxWBFMTBACEoLPIfSMhrCB99dxjv/pOiGs2cmXX6nJeUtjPKExtjRG0RiTxpgfoGqMjpTWUP04eX9bjn76GRQFqDZRzoDOAw/7KgHZQ1hDzA4p8g/ekLaPdv13DwAAAABJRU5ErkJggg==",
               "WhenOpened": "2025-07-07T05:03:00.771Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "TaskScheduler.h",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\TaskScheduler.h",
               "RelativeDocumentMoniker": "TaskScheduler.h",
@@ -138,12 +170,11 @@
               "RelativeToolTip": "TaskScheduler.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T03:55:51.229Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:51.229Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 12,
               "Title": "TaskScheduler.cpp",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\TaskScheduler.cpp",
               "RelativeDocumentMoniker": "TaskScheduler.cpp",
@@ -155,7 +186,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "RTCManager.h",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RTCManager.h",
               "RelativeDocumentMoniker": "RTCManager.h",
@@ -163,12 +194,11 @@
               "RelativeToolTip": "RTCManager.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T03:55:36.661Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:36.661Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "RTCManager.cpp",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RTCManager.cpp",
               "RelativeDocumentMoniker": "RTCManager.cpp",
@@ -176,12 +206,11 @@
               "RelativeToolTip": "RTCManager.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-07-07T03:55:30.754Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:30.754Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "BluetoothManager.h",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\BluetoothManager.h",
               "RelativeDocumentMoniker": "BluetoothManager.h",
@@ -189,12 +218,11 @@
               "RelativeToolTip": "BluetoothManager.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T03:55:24.309Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:24.309Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 11,
               "Title": "BluetoothManager.cpp",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\BluetoothManager.cpp",
               "RelativeDocumentMoniker": "BluetoothManager.cpp",
