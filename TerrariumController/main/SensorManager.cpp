@@ -147,6 +147,14 @@ String SensorManager::getCurrentTempC() {
     return "Error";
 }
 
+String SensorManager::getCurrentTempF() {
+    if (readSensor()) {
+        float tempF = convertToFahrenheit(lastTemperature);
+        return String(tempF, 1) + "°F";
+    }
+    return "Error";
+}
+
 String SensorManager::getCurrentHumid() {
     if (readSensor()) {
         return String(lastHumidity, 1) + "%";
@@ -175,8 +183,8 @@ void SensorManager::printTempF() {
     }
 }
 
-float SensorManager::convertToFahrenheit(uint32_t rawData) {
-    return (rawData * 9.0 / 5.0) + 32.0;
+float SensorManager::convertToFahrenheit(float tempC) {  // Changed parameter type
+    return (tempC * 9.0 / 5.0) + 32.0;
 }
 
 void SensorManager::printHumid() {
@@ -191,4 +199,3 @@ void SensorManager::printHumid() {
 
 // Global instance
 SensorManager snr;
-

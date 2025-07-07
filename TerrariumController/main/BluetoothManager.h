@@ -8,6 +8,7 @@
 #include <BLE2902.h>
 #include "TaskScheduler.h"
 #include "RTCManager.h"
+#include "SensorManager.h"
 
 class BluetoothManager {
 public:
@@ -22,7 +23,8 @@ private:
     BLEService* pService;
     BLECharacteristic* pRxWater;
     BLECharacteristic* pRtcTime;
-    BLECharacteristic* pScheduleRead; // Add this new characteristic
+    BLECharacteristic* pScheduleRead;
+    BLECharacteristic* pSensorRead;
 };
 
 // Callback for writing to BLE characteristics
@@ -53,6 +55,13 @@ public:
 
 private:
     TaskScheduler* scheduler;
+};
+
+// Add sensor read callback class
+class SensorReadCallback : public BLECharacteristicCallbacks {
+public:
+    SensorReadCallback();
+    void onRead(BLECharacteristic* pCharacteristic) override;
 };
 
 

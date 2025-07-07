@@ -5,6 +5,7 @@
 #define CHARACTERISTIC_UUID_WATER "12345678-1234-5678-1234-56789abcdef3"
 #define CHARACTERISTIC_UUID_RTC   "12345678-1234-5678-1234-56789abcdef4" // New UUID for RTC
 #define CHARACTERISTIC_UUID_SCHEDULE   "12345678-1234-5678-1234-56789abcdef5" // New UUID for Schedule
+#define CHARACTERISTIC_UUID_SENSOR_READ "12345678-1234-5678-1234-56789abcdef6" // New UUID for Sensor Read
 
 void BluetoothManager::initBLE(TaskScheduler* sched, RTCManager* rtcMgr) {
     scheduler = sched;
@@ -39,6 +40,13 @@ void BluetoothManager::initBLE(TaskScheduler* sched, RTCManager* rtcMgr) {
     );
     pScheduleRead->addDescriptor(new BLE2902());
     pScheduleRead->setCallbacks(new ScheduleReadCallback(scheduler));
+
+    pSensorRead = pService->createCharacteristic(
+        CHARACTERISTIC_UUID_SENSOR_READ,
+        BLECharacteristic::PROPERTY_READ
+    );
+    pSensorRead->addDescriptor(new BLE2902());
+    pSensorRead->setCallbacks(new SensorReadCallback());
 
     pService->start();
 }
@@ -77,4 +85,15 @@ ScheduleReadCallback::ScheduleReadCallback(TaskScheduler* sched) : scheduler(sch
 void ScheduleReadCallback::onRead(BLECharacteristic* pCharacteristic) {
     String scheduleInfo = scheduler->getSchedulesAsString();
     pCharacteristic->setValue(scheduleInfo.c_str());
+}
+
+// SensorReadCallback implementation
+SensorReadCallback::SensorReadCallback() {}
+
+void SensorReadCallback::onRead(BLECharacteristic* pCharacteristic) {
+    String tempC = snr.getCurrentTempC();
+    String tempF = snr.getCurrentTempF();
+    String humid = snr.getCurrentHumid();
+    String sensorData = "Temperature: " + tempC + ", " + tempF + " | Humidity: " + humid;
+    pCharacteristic->setValue(sensorData.c_str());
 }

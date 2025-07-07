@@ -30,7 +30,7 @@ private:
     bool waitForReady();
     uint32_t readRawData();
 
-    float convertToFahrenheit(uint32_t rawData);
+    float convertToFahrenheit(float tempC);
 };
 
 extern SensorManager snr; // Declare a global SensorManager instance
