@@ -88,6 +88,14 @@ void setup()
 
 void loop() 
 {
+
+    Serial.print("Internal low temp: ");
+    Serial.print(rcd.lowTempOfTheDay.value, 2);
+    Serial.print(" | Internal low humid: ");
+    Serial.println(rcd.lowHumidOfTheDay.value, 2);
+    static unsigned long lastAdvertisingCheck = 0;
+    unsigned long currentTime = millis();
+    
     DateTime now = rtc.getCurrentTime();
     float temp = snr.getCurrentTempF();
     float humid = snr.getCurrentHumid();
@@ -105,6 +113,19 @@ void loop()
     scheduler.updateTasks(now);
     String msg = "Temp\n" + String(temp, 1) + "F\n\n" + "Humid\n" + String(humid, 1) + "%\n";
     dsp.printMessage(msg);
-    rcd.printRecords(); // Print records to serial for debugging
-    delay(1000);
+    
+    rcd.printRecords();
+    delay(3000);
+    float highTemp = rcd.getHighTempDaily();
+    float lowTemp = rcd.getLowTempDaily();
+
+    float highHumid = rcd.getHighHumidDaily();
+    float lowHumid = rcd.getLowHumidDaily();
+
+    dsp.clearDisplay();
+    dsp.printMessage("High\nTemp\n" + String(highTemp, 1) + "F\n\n" +
+                     "Low\nTemp\n" + String(lowTemp, 1) + "F\n\n" +
+                     "High\nHumid\n" + String(highHumid, 1) + "%\n\n" +
+                     "Low\nHumid\n" + String(lowHumid, 1) + "%");
+    delay(3000);
 }

@@ -21,11 +21,13 @@ SensorManager::SensorManager()
 {
 }
 
-void SensorManager::initSensors() {
+void SensorManager::initSensors()
+{
     Wire.begin();
     delay(40); // Power-on delay for AHT25
     
-    if (!isSensorAvailable()) {
+    if (!isSensorAvailable())
+    {
         Serial.println("AHT25 sensor not found!");
         sensorInitialized = false;
         return;
@@ -46,24 +48,30 @@ void SensorManager::initSensors() {
     
     // Check if calibrated
     Wire.requestFrom(AHT_ADDRESS, 1);
-    if (Wire.available()) {
+    if (Wire.available())
+    {
         uint8_t status = Wire.read();
-        if (status & AHT_STATUS_CALIBRATED) {
+        if (status & AHT_STATUS_CALIBRATED)
+        {
             sensorInitialized = true;
             Serial.println("AHT25 sensor initialized successfully");
-        } else {
+        }
+        else
+        {
             Serial.println("AHT25 sensor calibration failed");
             sensorInitialized = false;
         }
     }
 }
 
-bool SensorManager::isSensorAvailable() {
+bool SensorManager::isSensorAvailable()
+{
     Wire.beginTransmission(AHT_ADDRESS);
     return (Wire.endTransmission() == 0);
 }
 
-bool SensorManager::readSensor() {
+bool SensorManager::readSensor()
+{
     if (!sensorInitialized) {
         return false;
     }
@@ -119,7 +127,8 @@ bool SensorManager::readSensor() {
     return true;
 }
 
-bool SensorManager::waitForReady() {
+bool SensorManager::waitForReady()
+{
     unsigned long startTime = millis();
     while (millis() - startTime < 100) { // 100ms timeout
         Wire.requestFrom(AHT_ADDRESS, 1);
@@ -134,7 +143,8 @@ bool SensorManager::waitForReady() {
     return false; // Timeout
 }
 
-void SensorManager::sendCommand(uint8_t cmd) {
+void SensorManager::sendCommand(uint8_t cmd)
+{
     Wire.beginTransmission(AHT_ADDRESS);
     Wire.write(cmd);
     Wire.endTransmission();
@@ -152,7 +162,8 @@ float SensorManager::getCurrentTempC()
     }
 }
 
-float SensorManager::getCurrentTempF() {
+float SensorManager::getCurrentTempF()
+{
     if (readSensor())
     {
         return convertToFahrenheit(lastTemperature);
@@ -163,7 +174,8 @@ float SensorManager::getCurrentTempF() {
     }
 }
 
-float SensorManager::getCurrentHumid() {
+float SensorManager::getCurrentHumid()
+{
     if (readSensor())
     {
         return lastHumidity;
@@ -175,7 +187,8 @@ float SensorManager::getCurrentHumid() {
 }
 
 void SensorManager::printTempC() {
-    if (readSensor()) {
+    if (readSensor())
+    {
         Serial.print("Temperature: ");
         Serial.print(lastTemperature, 1);
         Serial.println("°C");
@@ -185,17 +198,21 @@ void SensorManager::printTempC() {
 }
 
 void SensorManager::printTempF() {
-    if (readSensor()) {
+    if (readSensor())
+    {
         Serial.print("Temperature: ");
         float tempF = convertToFahrenheit(lastTemperature);
         Serial.print(tempF, 1);
         Serial.println("°F");
-    } else {
+    }
+    else
+    {
         Serial.println("Failed to read temperature");
     }
 }
 
-float SensorManager::convertToFahrenheit(float tempC) {  // Changed parameter type
+float SensorManager::convertToFahrenheit(float tempC)
+{
     return (tempC * 9.0 / 5.0) + 32.0;
 }
 
@@ -204,9 +221,24 @@ void SensorManager::printHumid() {
         Serial.print("Humidity: ");
         Serial.print(lastHumidity, 1);
         Serial.println("%");
-    } else {
+    }
+    else 
+    {
         Serial.println("Failed to read humidity");
     }
+}
+
+String SensorManager::getSensorDataAsJSON()
+{
+    if (!readSensor())
+    {
+        return "{}";
+    }
+    String json = "{";
+    json += "\"temperature\": " + String(lastTemperature, 1) + ",";
+    json += "\"humidity\": " + String(lastHumidity, 1);
+    json += "}";
+    return json;
 }
 
 // Global instance

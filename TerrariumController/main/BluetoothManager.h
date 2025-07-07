@@ -9,6 +9,7 @@
 #include "TaskScheduler.h"
 #include "RTCManager.h"
 #include "SensorManager.h"
+#include "RecordManager.h"
 
 class BluetoothManager {
 public:
@@ -25,6 +26,7 @@ private:
     BLECharacteristic* pRtcTime;
     BLECharacteristic* pScheduleRead;
     BLECharacteristic* pSensorRead;
+    BLECharacteristic* pRecordRead;
 };
 
 // Callback for writing to BLE characteristics
@@ -61,6 +63,13 @@ private:
 class SensorReadCallback : public BLECharacteristicCallbacks {
 public:
     SensorReadCallback();
+    void onRead(BLECharacteristic* pCharacteristic) override;
+};
+
+// Add record read callback class
+class RecordReadCallback : public BLECharacteristicCallbacks {
+    public:
+    RecordReadCallback();
     void onRead(BLECharacteristic* pCharacteristic) override;
 };
 

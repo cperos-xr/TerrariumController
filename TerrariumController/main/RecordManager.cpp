@@ -33,7 +33,8 @@ void RecordManager::initRecords() {
 Record RecordManager::createInvalidRecord(SensorType type) {
     Record invalid;
     invalid.sensorType = type;
-    invalid.value = (type == TEMPERATURE) ? -999.0 : -1.0; // Invalid values
+    // Use extremely high values for invalid records so they get replaced by any real reading
+    invalid.value = (type == TEMPERATURE) ? 999.0 : 999.0; // Very high invalid values
     invalid.dateTime = DateTime(2000, 1, 1, 0, 0, 0); // Invalid date
     return invalid;
 }
@@ -55,41 +56,42 @@ void RecordManager::analyzeReading(SensorType sensorType, float value, DateTime 
     switch (sensorType) {
         case TEMPERATURE:
             // Daily temperature records
-            if (highTempOfTheDay.value == -999.0 || value > highTempOfTheDay.value) {
+            if (highTempOfTheDay.value == 999.0 || value > highTempOfTheDay.value) {
                 updateRecord(highTempOfTheDay, value, dateTime, true);
             }
-            if (lowTempOfTheDay.value == -999.0 || value < lowTempOfTheDay.value) {
+            if (lowTempOfTheDay.value == 999.0 || value < lowTempOfTheDay.value) {
                 updateRecord(lowTempOfTheDay, value, dateTime, false);
             }
             
             // Weekly temperature records
-            if (highTempOfTheWeek.value == -999.0 || value > highTempOfTheWeek.value) {
+            if (highTempOfTheWeek.value == 999.0 || value > highTempOfTheWeek.value) {
                 updateRecord(highTempOfTheWeek, value, dateTime, true);
             }
-            if (lowTempOfTheWeek.value == -999.0 || value < lowTempOfTheWeek.value) {
+            if (lowTempOfTheWeek.value == 999.0 || value < lowTempOfTheWeek.value) {
                 updateRecord(lowTempOfTheWeek, value, dateTime, false);
             }
             break;
             
         case HUMIDITY:
             // Daily humidity records
-            if (highHumidOfTheDay.value == -1.0 || value > highHumidOfTheDay.value) {
+            if (highHumidOfTheDay.value == 999.0 || value > highHumidOfTheDay.value) {
                 updateRecord(highHumidOfTheDay, value, dateTime, true);
             }
-            if (lowHumidOfTheDay.value == -1.0 || value < lowHumidOfTheDay.value) {
+            if (lowHumidOfTheDay.value == 999.0 || value < lowHumidOfTheDay.value) {
                 updateRecord(lowHumidOfTheDay, value, dateTime, false);
             }
             
             // Weekly humidity records
-            if (highHumidOfTheWeek.value == -1.0 || value > highHumidOfTheWeek.value) {
+            if (highHumidOfTheWeek.value == 999.0 || value > highHumidOfTheWeek.value) {
                 updateRecord(highHumidOfTheWeek, value, dateTime, true);
             }
-            if (lowHumidOfTheWeek.value == -1.0 || value < lowHumidOfTheWeek.value) {
+            if (lowHumidOfTheWeek.value == 999.0 || value < lowHumidOfTheWeek.value) {
                 updateRecord(lowHumidOfTheWeek, value, dateTime, false);
             }
             break;
     }
 }
+
 
 void RecordManager::addToRollingBuffer(SensorType sensorType, float value, DateTime dateTime) {
     Record newRecord;
@@ -151,17 +153,17 @@ void RecordManager::updateRollingWeeklyRecords(DateTime currentTime) {
 
 Record RecordManager::findBestInTimeRange(Record buffer[], DateTime currentTime, int daysBack, bool findHigh, SensorType type) {
     Record best = createInvalidRecord(type);
-    long cutoffTime = currentTime.unixtime() - (daysBack * 86400); // 86400 seconds per day
+    long cutoffTime = currentTime.unixtime() - (daysBack * 86400);
     
     for (int i = 0; i < MAX_ROLLING_RECORDS; i++) {
         // Skip invalid records
-        if (buffer[i].value == -999.0 || buffer[i].value == -1.0) continue;
+        if (buffer[i].value == 999.0) continue;
         
         // Skip records older than cutoff
         if (buffer[i].dateTime.unixtime() < cutoffTime) continue;
         
         // Check if this is a better record
-        if (best.value == -999.0 || best.value == -1.0) {
+        if (best.value == 999.0) {
             best = buffer[i]; // First valid record found
         } else if (findHigh && buffer[i].value > best.value) {
             best = buffer[i]; // New high found
@@ -246,7 +248,7 @@ void RecordManager::printRecords() {
     
     Serial.println("DAILY RECORDS:");
     Serial.print("High Temp: ");
-    if (highTempOfTheDay.value != -999.0) {
+    if (highTempOfTheDay.value != 999.0) {
         Serial.print(highTempOfTheDay.value, 1);
         Serial.print("C (");
         printDateTime(highTempOfTheDay.dateTime);
@@ -256,7 +258,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Temp: ");
-    if (lowTempOfTheDay.value != -999.0) {
+    if (lowTempOfTheDay.value != 999.0) {
         Serial.print(lowTempOfTheDay.value, 1);
         Serial.print("C (");
         printDateTime(lowTempOfTheDay.dateTime);
@@ -266,7 +268,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("High Humidity: ");
-    if (highHumidOfTheDay.value != -1.0) {
+    if (highHumidOfTheDay.value != 999.0) {
         Serial.print(highHumidOfTheDay.value, 1);
         Serial.print("% (");
         printDateTime(highHumidOfTheDay.dateTime);
@@ -276,7 +278,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Humidity: ");
-    if (lowHumidOfTheDay.value != -1.0) {
+    if (lowHumidOfTheDay.value != 999.0) {
         Serial.print(lowHumidOfTheDay.value, 1);
         Serial.print("% (");
         printDateTime(lowHumidOfTheDay.dateTime);
@@ -287,7 +289,7 @@ void RecordManager::printRecords() {
     
     Serial.println("WEEKLY RECORDS:");
     Serial.print("High Temp: ");
-    if (highTempOfTheWeek.value != -999.0) {
+    if (highTempOfTheWeek.value != 999.0) {
         Serial.print(highTempOfTheWeek.value, 1);
         Serial.print("C (");
         printDateTime(highTempOfTheWeek.dateTime);
@@ -297,7 +299,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Temp: ");
-    if (lowTempOfTheWeek.value != -999.0) {
+    if (lowTempOfTheWeek.value != 999.0) {
         Serial.print(lowTempOfTheWeek.value, 1);
         Serial.print("C (");
         printDateTime(lowTempOfTheWeek.dateTime);
@@ -307,7 +309,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("High Humidity: ");
-    if (highHumidOfTheWeek.value != -1.0) {
+    if (highHumidOfTheWeek.value != 999.0) {
         Serial.print(highHumidOfTheWeek.value, 1);
         Serial.print("% (");
         printDateTime(highHumidOfTheWeek.dateTime);
@@ -317,7 +319,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Humidity: ");
-    if (lowHumidOfTheWeek.value != -1.0) {
+    if (lowHumidOfTheWeek.value != 999.0) {
         Serial.print(lowHumidOfTheWeek.value, 1);
         Serial.print("% (");
         printDateTime(lowHumidOfTheWeek.dateTime);
@@ -338,38 +340,39 @@ void RecordManager::printDateTime(const DateTime& dt) {
     Serial.print(dt.minute());
 }
 
-// Getter methods remain the same...
+// Getter methods - Updated to check for invalid values
 float RecordManager::getHighTempDaily() const {
-    return (highTempOfTheDay.value != -999.0) ? highTempOfTheDay.value : 0.0;
+    return (highTempOfTheDay.value != 999.0) ? highTempOfTheDay.value : NAN;
 }
 
 float RecordManager::getLowTempDaily() const {
-    return (lowTempOfTheDay.value != -999.0) ? lowTempOfTheDay.value : 0.0;
+    return (lowTempOfTheDay.value != 999.0) ? lowTempOfTheDay.value : NAN;
 }
 
 float RecordManager::getHighHumidDaily() const {
-    return (highHumidOfTheDay.value != -1.0) ? highHumidOfTheDay.value : 0.0;
+    return (highHumidOfTheDay.value != 999.0) ? highHumidOfTheDay.value : NAN;
 }
 
 float RecordManager::getLowHumidDaily() const {
-    return (lowHumidOfTheDay.value != -1.0) ? lowHumidOfTheDay.value : 0.0;
+    return (lowHumidOfTheDay.value != 999.0) ? lowHumidOfTheDay.value : NAN;
 }
 
 float RecordManager::getHighTempWeekly() const {
-    return (highTempOfTheWeek.value != -999.0) ? highTempOfTheWeek.value : 0.0;
+    return (highTempOfTheWeek.value != 999.0) ? highTempOfTheWeek.value : NAN;
 }
 
 float RecordManager::getLowTempWeekly() const {
-    return (lowTempOfTheWeek.value != -999.0) ? lowTempOfTheWeek.value : 0.0;
+    return (lowTempOfTheWeek.value != 999.0) ? lowTempOfTheWeek.value : NAN;
 }
 
 float RecordManager::getHighHumidWeekly() const {
-    return (highHumidOfTheWeek.value != -1.0) ? highHumidOfTheWeek.value : 0.0;
+    return (highHumidOfTheWeek.value != 999.0) ? highHumidOfTheWeek.value : NAN;
 }
 
 float RecordManager::getLowHumidWeekly() const {
-    return (lowHumidOfTheWeek.value != -1.0) ? lowHumidOfTheWeek.value : 0.0;
+    return (lowHumidOfTheWeek.value != 999.0) ? lowHumidOfTheWeek.value : NAN;
 }
+
 
 String RecordManager::getCurrentRecordsAsJSON() const {
     String json = "{";
@@ -377,30 +380,87 @@ String RecordManager::getCurrentRecordsAsJSON() const {
     // Daily records
     json += "\"daily\":{";
     json += "\"temperature\":{";
-    json += "\"high\":" + String(getHighTempDaily(), 1) + ",";
-    json += "\"low\":" + String(getLowTempDaily(), 1);
+    
+    float highTempDaily = getHighTempDaily();
+    float lowTempDaily = getLowTempDaily();
+    
+    if (isnan(highTempDaily)) {
+        json += "\"high\":null,";
+    } else {
+        json += "\"high\":" + String(highTempDaily, 1) + ",";
+    }
+    
+    if (isnan(lowTempDaily)) {
+        json += "\"low\":null";
+    } else {
+        json += "\"low\":" + String(lowTempDaily, 1);
+    }
+    
     json += "},";
     json += "\"humidity\":{";
-    json += "\"high\":" + String(getHighHumidDaily(), 1) + ",";
-    json += "\"low\":" + String(getLowHumidDaily(), 1);
+    
+    float highHumidDaily = getHighHumidDaily();
+    float lowHumidDaily = getLowHumidDaily();
+    
+    if (isnan(highHumidDaily)) {
+        json += "\"high\":null,";
+    } else {
+        json += "\"high\":" + String(highHumidDaily, 1) + ",";
+    }
+    
+    if (isnan(lowHumidDaily)) {
+        json += "\"low\":null";
+    } else {
+        json += "\"low\":" + String(lowHumidDaily, 1);
+    }
+    
     json += "}";
     json += "},";
     
-    // Weekly records
+    // Weekly records (same pattern)
     json += "\"weekly\":{";
     json += "\"temperature\":{";
-    json += "\"high\":" + String(getHighTempWeekly(), 1) + ",";
-    json += "\"low\":" + String(getLowTempWeekly(), 1);
+    
+    float highTempWeekly = getHighTempWeekly();
+    float lowTempWeekly = getLowTempWeekly();
+    
+    if (isnan(highTempWeekly)) {
+        json += "\"high\":null,";
+    } else {
+        json += "\"high\":" + String(highTempWeekly, 1) + ",";
+    }
+    
+    if (isnan(lowTempWeekly)) {
+        json += "\"low\":null";
+    } else {
+        json += "\"low\":" + String(lowTempWeekly, 1);
+    }
+    
     json += "},";
     json += "\"humidity\":{";
-    json += "\"high\":" + String(getHighHumidWeekly(), 1) + ",";
-    json += "\"low\":" + String(getLowHumidWeekly(), 1);
+    
+    float highHumidWeekly = getHighHumidWeekly();
+    float lowHumidWeekly = getLowHumidWeekly();
+    
+    if (isnan(highHumidWeekly)) {
+        json += "\"high\":null,";
+    } else {
+        json += "\"high\":" + String(highHumidWeekly, 1) + ",";
+    }
+    
+    if (isnan(lowHumidWeekly)) {
+        json += "\"low\":null";
+    } else {
+        json += "\"low\":" + String(lowHumidWeekly, 1);
+    }
+    
     json += "}";
     json += "}";
     
     json += "}";
     return json;
 }
+
 
 // Global instance
 RecordManager rcd;

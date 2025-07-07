@@ -11,12 +11,14 @@ public:
     SensorManager();
     void initSensors();
     void printTempC();
-    float getCurrentTempC();    // Fixed: String instead of string
+    float getCurrentTempC();
     void printTempF();
-    float getCurrentTempF();    // Fixed: String instead of string
+    float getCurrentTempF();
     void printHumid();
-    float getCurrentHumid();   // Fixed: String instead of string
+    float getCurrentHumid();
     bool isSensorAvailable();
+    bool readSensor();
+    String getSensorDataAsJSON(); // Fixed: Added missing semicolon
 
 private:
     bool sensorInitialized;
@@ -25,7 +27,7 @@ private:
     unsigned long lastReadTime;
     
     // AHT25 specific methods
-    bool readSensor();
+    // Removed duplicate readSensor() declaration
     void sendCommand(uint8_t cmd);
     bool waitForReady();
     uint32_t readRawData();
