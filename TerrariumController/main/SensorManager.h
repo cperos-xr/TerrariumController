@@ -4,18 +4,18 @@
 #include <Wire.h>
 #include <Arduino.h>
 
-#define AHT_ADDRESS 0x38 // AHT25 I�C address
+#define AHT_ADDRESS 0x38 // AHT25 I2C address
 
 class SensorManager {
 public:
     SensorManager();
     void initSensors();
     void printTempC();
-    String getCurrentTempC();    // Fixed: String instead of string
+    float getCurrentTempC();    // Fixed: String instead of string
     void printTempF();
-    String getCurrentTempF();    // Fixed: String instead of string
+    float getCurrentTempF();    // Fixed: String instead of string
     void printHumid();
-    String getCurrentHumid();   // Fixed: String instead of string
+    float getCurrentHumid();   // Fixed: String instead of string
     bool isSensorAvailable();
 
 private:

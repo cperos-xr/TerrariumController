@@ -140,26 +140,38 @@ void SensorManager::sendCommand(uint8_t cmd) {
     Wire.endTransmission();
 }
 
-String SensorManager::getCurrentTempC() {
-    if (readSensor()) {
-        return String(lastTemperature, 1) + "°C";
+float SensorManager::getCurrentTempC()
+{
+    if (readSensor())
+    {
+        return lastTemperature;
     }
-    return "Error";
+    else
+    {
+        return -1;
+    }
 }
 
-String SensorManager::getCurrentTempF() {
-    if (readSensor()) {
-        float tempF = convertToFahrenheit(lastTemperature);
-        return String(tempF, 1) + "°F";
+float SensorManager::getCurrentTempF() {
+    if (readSensor())
+    {
+        return convertToFahrenheit(lastTemperature);
     }
-    return "Error";
+    else
+    {
+        return -1;
+    }
 }
 
-String SensorManager::getCurrentHumid() {
-    if (readSensor()) {
-        return String(lastHumidity, 1) + "%";
+float SensorManager::getCurrentHumid() {
+    if (readSensor())
+    {
+        return lastHumidity;
     }
-    return "Error";
+    else
+    {
+        return -1;
+    }
 }
 
 void SensorManager::printTempC() {

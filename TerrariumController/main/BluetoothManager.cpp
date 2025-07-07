@@ -91,9 +91,9 @@ void ScheduleReadCallback::onRead(BLECharacteristic* pCharacteristic) {
 SensorReadCallback::SensorReadCallback() {}
 
 void SensorReadCallback::onRead(BLECharacteristic* pCharacteristic) {
-    String tempC = snr.getCurrentTempC();
-    String tempF = snr.getCurrentTempF();
-    String humid = snr.getCurrentHumid();
-    String sensorData = "Temperature: " + tempC + ", " + tempF + " | Humidity: " + humid;
+    float tempC = snr.getCurrentTempC();
+    float tempF = snr.getCurrentTempF();
+    float humid = snr.getCurrentHumid();
+    String sensorData = "Temperature: " + String(tempC) + "°C, " + String(tempF) + "°F | Humidity: " + String(humid) + "%";
     pCharacteristic->setValue(sensorData.c_str());
 }

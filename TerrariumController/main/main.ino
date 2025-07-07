@@ -19,6 +19,7 @@
 #include "SensorManager.h"
 #include "TaskScheduler.h"
 #include "BluetoothManager.h"
+#include "DisplayManager.h"
 
 // Pin definitions
 const int PIN_LIGHT = 4;
@@ -30,6 +31,7 @@ const int PIN_WATER = 3;
 RTCManager rtc;
 TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
 BluetoothManager ble;
+DisplayManager dsp;
 
 void setup() 
 {
@@ -51,6 +53,15 @@ void setup()
       Serial.println("AHT25 sensor detected at address 0x38.");
       snr.initSensors(); // Initialize AHT25 sensor
       Serial.println("Sensor initialization finished."); // Debug message
+  }
+
+  if(dsp.isDisplayAvailable()) 
+  {
+      Serial.println("Display detected at address 0x3C.");
+      dsp.initDisplay(); // Initialize display
+      dsp.clearDisplay();
+      dsp.printMessage("Terrarium Controller Ready");
+      Serial.println("Display initialization finished."); // Debug message
   }
 
   Serial.println("Scanning for I2C devices...");
@@ -77,10 +88,7 @@ void setup()
 void loop() 
 {
   scheduler.updateTasks(rtc.getCurrentTime());
-  
-  snr.printTempC();
-  snr.printTempF();
-  snr.printHumid();
-  
+  String msg = "Temp\n" + String(snr.getCurrentTempF()) + "F\n" + "Humid\n" + String(snr.getCurrentHumid()) + "%\n";
+  dsp.printMessage(msg);
   delay(1000);
 }
