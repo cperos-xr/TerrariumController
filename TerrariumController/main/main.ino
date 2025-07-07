@@ -16,6 +16,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "RTCManager.h"
+#include "SensorManager.h"
 #include "TaskScheduler.h"
 #include "BluetoothManager.h"
 
@@ -30,17 +31,39 @@ RTCManager rtc;
 TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
 BluetoothManager ble;
 
-void setup() {
+void setup() 
+{
   Serial.begin(9600); // Start serial communication
   Serial.println("Setup started..."); // Debug message
   while (!Serial); // Wait for serial to be ready
   Wire.begin(SDA_PIN, SCL_PIN);
-  if (rtc.isRTCAvailable()) {
+  
+  if (rtc.isRTCAvailable())
+  {
       Serial.println("RTC detected at address 0x68.");
       rtc.initRTC(); // Initialize RTC
       Serial.println("RTC initialization finished."); // Debug message
       rtc.printCurrentTime(); // Print current time to serial
   }
+  
+  if(snr.isSensorAvailable()) 
+  {
+      Serial.println("AHT25 sensor detected at address 0x38.");
+      snr.initSensors(); // Initialize AHT25 sensor
+      Serial.println("Sensor initialization finished."); // Debug message
+  }
+
+  Serial.println("Scanning for I2C devices...");
+  for (byte address = 1; address < 127; address++)
+  {
+      Wire.beginTransmission(address);
+      if (Wire.endTransmission() == 0) {
+          Serial.print("Found I2C device at address 0x");
+          Serial.println(address, HEX);
+      }
+  }
+  Serial.println("Scan complete.");
+
   
   pinMode(PIN_LIGHT, OUTPUT);
   pinMode(PIN_WATER, OUTPUT);
@@ -49,20 +72,15 @@ void setup() {
   
   ble.initBLE(&scheduler, &rtc);
   ble.startAdvertising();
-
-
-  Serial.println("Scanning for I2C devices...");
-  for (byte address = 1; address < 127; address++) {
-      Wire.beginTransmission(address);
-      if (Wire.endTransmission() == 0) {
-          Serial.print("Found I2C device at address 0x");
-          Serial.println(address, HEX);
-      }
-  }
-  Serial.println("Scan complete.");
 }
 
-void loop() {
+void loop() 
+{
   scheduler.updateTasks(rtc.getCurrentTime());
+  
+  snr.printTempC();
+  snr.printTempF();
+  snr.printHumid();
+  
   delay(1000);
 }

@@ -16,6 +16,7 @@ public:
     TaskScheduler(int lightPin, int waterPin);
     void parseAndSetSchedule(const String& cmd);
     void updateTasks(const DateTime& now);
+    String getSchedulesAsString();
 
 private:
     int lightPin, waterPin;
@@ -26,6 +27,7 @@ private:
     void executeTask(int, int, bool&, unsigned long&);
     bool matchSchedule(const DateTime&, const Schedule&, bool&);
     ScheduleType parseType(const String& s);
+    String scheduleToString(const Schedule& sch, const String& type);
 };
 
 #endif

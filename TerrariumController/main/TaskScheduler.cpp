@@ -105,6 +105,48 @@ void TaskScheduler::applySchedule(
   }
 }
 
+String TaskScheduler::getSchedulesAsString() {
+    String result = "LIGHT:";
+    
+    // Format light schedule
+    result += scheduleToString(lightSchedule, "LIGHT");
+    result += ";WATER:";
+    
+    // Format water schedule  
+    result += scheduleToString(waterSchedule, "WATER");
+    
+    return result;
+}
+
+// Helper method to convert schedule to string
+String TaskScheduler::scheduleToString(const Schedule& sch, const String& type) {
+    if (sch.type == NONE) {
+        return "NONE";
+    }
+    
+    String typeStr;
+    switch (sch.type) {
+        case ALWAYS_ON: typeStr = "ALWAYS_ON"; break;
+        case DAILY: typeStr = "DAILY"; break;
+        case WEEKLY: typeStr = "WEEKLY"; break;
+        case TWICE_DAILY: typeStr = "TWICE_DAILY"; break;
+        case TWICE_WEEKLY: typeStr = "TWICE_WEEKLY"; break;
+        case MONTHLY: typeStr = "MONTHLY"; break;
+        case TWICE_MONTHLY: typeStr = "TWICE_MONTHLY"; break;
+        default: typeStr = "UNKNOWN"; break;
+    }
+    
+    String result = typeStr + "," + String(sch.hour1) + ":" + String(sch.minute1) + 
+                   "," + String(sch.duration1/1000) + "s";
+    
+    // Add second time for TWICE_* schedules
+    if (sch.type == TWICE_DAILY || sch.type == TWICE_WEEKLY || sch.type == TWICE_MONTHLY) {
+        result += "," + String(sch.hour2) + ":" + String(sch.minute2);
+    }
+    
+    return result;
+}
+
 // Engage the pin for the specified duration
 void TaskScheduler::executeTask(
   int pin,
@@ -144,14 +186,6 @@ bool TaskScheduler::matchSchedule(
       }
       break;
 
-    case WEEKLY:
-      if (now.dayOfTheWeek() == 0 && now.hour() == sch.hour1
-          && now.minute() == sch.minute1 && now.second() == 0) {
-        isSecond = false;
-        return true;
-      }
-      break;
-
     case TWICE_WEEKLY:
       if (now.second() == 0) {
         if (now.dayOfTheWeek() == 0 && now.hour() == sch.hour1
@@ -167,8 +201,8 @@ bool TaskScheduler::matchSchedule(
       }
       break;
 
-    case MONTHLY:
-      if (now.day() == 1 && now.hour() == sch.hour1
+    case WEEKLY:
+      if (now.dayOfTheWeek() == 0 && now.hour() == sch.hour1
           && now.minute() == sch.minute1 && now.second() == 0) {
         isSecond = false;
         return true;
@@ -187,6 +221,14 @@ bool TaskScheduler::matchSchedule(
           isSecond = true;
           return true;
         }
+      }
+      break;
+
+    case MONTHLY:
+      if (now.day() == 1 && now.hour() == sch.hour1
+          && now.minute() == sch.minute1 && now.second() == 0) {
+        isSecond = false;
+        return true;
       }
       break;
 
