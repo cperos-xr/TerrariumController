@@ -292,3 +292,30 @@ bool TaskScheduler::loadSchedules() {
     
     return true;
 }
+
+// Add this method implementation
+bool TaskScheduler::clearSchedules() {
+    // Remove the schedule file if it exists
+    if (LittleFS.exists(SCHEDULE_FILE)) {
+        if (LittleFS.remove(SCHEDULE_FILE)) {
+            Serial.println("✅ Schedules file removed successfully");
+        } else {
+            Serial.println("❌ Failed to remove schedules file");
+            return false;
+        }
+    }
+    
+    // Reset schedules to NONE
+    Schedule emptySchedule = {NONE, 0, 0, 0, 0, 0, 0};
+    lightSchedule = emptySchedule;
+    waterSchedule = emptySchedule;
+    
+    // Turn off any running outputs
+    digitalWrite(lightPin, LOW);
+    digitalWrite(waterPin, LOW);
+    lightRunning = false;
+    waterRunning = false;
+    
+    Serial.println("✅ All schedules reset to default values");
+    return true;
+}

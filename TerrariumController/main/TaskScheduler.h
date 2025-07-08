@@ -25,6 +25,7 @@ public:
     // Add these methods for schedule persistence
     bool saveSchedules();
     bool loadSchedules();
+    bool clearSchedules();
 
 private:
     int lightPin, waterPin;
