@@ -33,10 +33,23 @@ RTCManager rtc;
 TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
 BluetoothManager ble;
 DisplayManager dsp;
+RecordManager rcd;
 
 void setup() 
 {
-  Serial.begin(9600); // Start serial communication
+  Serial.begin(9600);
+  // Try to mount; format on first failure
+  if (!LittleFS.begin(true)) {
+    Serial.println("LittleFS mount failed → formatting and retrying");
+    LittleFS.format();
+    if (!LittleFS.begin()) {
+      Serial.println("!! LittleFS still failing");
+      while (1) delay(1000);
+    }
+  }
+
+  Serial.println("LittleFS mounted");
+  rcd.initRecords();
   Serial.println("Setup started..."); // Debug message
   while (!Serial); // Wait for serial to be ready
   Wire.begin(SDA_PIN, SCL_PIN);
@@ -65,7 +78,7 @@ void setup()
       Serial.println("Display initialization finished."); // Debug message
   }
 
-  rcd.loadRecordsFromEEPROM();
+  rcd.loadRecords();
 
   Serial.println("Scanning for I2C devices...");
   for (byte address = 1; address < 127; address++)
@@ -90,6 +103,16 @@ void setup()
 
 void loop() 
 {
+    static bool firstRun = true;
+    
+    if (firstRun) {
+        Serial.println("===== FIRST RUN DEBUG =====");
+        Serial.print("Initial low temp: ");
+        Serial.println(rcd.lowTempOfTheDay.value);
+        Serial.print("Initial low humid: ");
+        Serial.println(rcd.lowHumidOfTheDay.value);
+        firstRun = false;
+    }
 
     Serial.print("Internal low temp: ");
     Serial.print(rcd.lowTempOfTheDay.value, 2);
@@ -98,7 +121,7 @@ void loop()
     static unsigned long lastAdvertisingCheck = 0;
     unsigned long currentTime = millis();
     if (rcd.recordsChanged || currentTime - rcd.lastSaveTime >= 3600000) { // Save if changed or hourly
-        rcd.saveRecordsToEEPROM();
+        rcd.saveRecords();
         rcd.recordsChanged = false; // Reset the flag
         rcd.lastSaveTime = currentTime; // Update the last save time
     }
