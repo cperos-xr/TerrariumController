@@ -97,12 +97,13 @@ void loop()
     unsigned long currentTime = millis();
     
     DateTime now = rtc.getCurrentTime();
-    float temp = snr.getCurrentTempF();
+    float tempC = snr.getCurrentTempC();
+    float tempF = snr.getCurrentTempF(); // Get Fahrenheit temp instead
     float humid = snr.getCurrentHumid();
     
-    if (temp != -1)
+    if (tempC != -1)
     {
-        rcd.analyzeReading(TEMPERATURE, temp, now);
+        rcd.analyzeReading(TEMPERATURE, tempC, now); // Pass Celsius for records
     }
     
     if (humid != -1)
@@ -111,7 +112,7 @@ void loop()
     }
     
     scheduler.updateTasks(now);
-    String msg = "Temp\n" + String(temp, 1) + "F\n\n" + "Humid\n" + String(humid, 1) + "%\n";
+    String msg = "Temp\n" + String(tempC, 1) + "C\n\n" + "Humid\n" + String(humid, 1) + "%\n";
     dsp.printMessage(msg);
     
     rcd.printRecords();
@@ -123,9 +124,17 @@ void loop()
     float lowHumid = rcd.getLowHumidDaily();
 
     dsp.clearDisplay();
-    dsp.printMessage("High\nTemp\n" + String(highTemp, 1) + "F\n\n" +
-                     "Low\nTemp\n" + String(lowTemp, 1) + "F\n\n" +
+    dsp.printMessage("High\nTemp\n" + String(highTemp, 1) + "C\n\n" +
+                     "Low\nTemp\n" + String(lowTemp, 1) + "C\n\n" +
                      "High\nHumid\n" + String(highHumid, 1) + "%\n\n" +
                      "Low\nHumid\n" + String(lowHumid, 1) + "%");
     delay(3000);
+
+    Serial.print("Low Temp Check - Is max: ");
+    Serial.print((rcd.lowTempOfTheDay.value == std::numeric_limits<float>::max()) ? "YES" : "NO");
+    Serial.print(", Value: ");
+    Serial.println(rcd.lowTempOfTheDay.value);
+
+    Serial.print("Current Temp C: ");
+    Serial.println(tempC);
 }

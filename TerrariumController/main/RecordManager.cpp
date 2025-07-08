@@ -8,23 +8,29 @@ RecordManager::RecordManager() {
 }
 
 void RecordManager::initRecords() {
-    // Initialize all records with invalid values
-    highTempOfTheWeek = createInvalidRecord(TEMPERATURE);
-    lowTempOfTheWeek = createInvalidRecord(TEMPERATURE);
-    highHumidOfTheWeek = createInvalidRecord(HUMIDITY);
-    lowHumidOfTheWeek = createInvalidRecord(HUMIDITY);
+    // Initialize HIGH records with very LOW values (so any real reading will be higher)
+    highTempOfTheWeek = createInvalidHighRecord(TEMPERATURE);
+    highHumidOfTheWeek = createInvalidHighRecord(HUMIDITY);
+    highTempOfTheDay = createInvalidHighRecord(TEMPERATURE);
+    highHumidOfTheDay = createInvalidHighRecord(HUMIDITY);
     
-    highTempOfTheDay = createInvalidRecord(TEMPERATURE);
-    lowTempOfTheDay = createInvalidRecord(TEMPERATURE);
-    highHumidOfTheDay = createInvalidRecord(HUMIDITY);
-    lowHumidOfTheDay = createInvalidRecord(HUMIDITY);
+    // Initialize LOW records with very HIGH values (so any real reading will be lower)
+    lowTempOfTheWeek = createInvalidLowRecord(TEMPERATURE);
+    lowHumidOfTheWeek = createInvalidLowRecord(HUMIDITY);
+    lowTempOfTheDay = createInvalidLowRecord(TEMPERATURE);
+    lowHumidOfTheDay = createInvalidLowRecord(HUMIDITY);
+    
+    Serial.print("Initialized lowTempOfTheDay to: ");
+    Serial.println(lowTempOfTheDay.value);
+    Serial.print("Initialized lowHumidOfTheDay to: ");
+    Serial.println(lowHumidOfTheDay.value);
     
     // Clear rolling buffers
     for (int i = 0; i < MAX_ROLLING_RECORDS; i++) {
-        rollingTempHighs[i] = createInvalidRecord(TEMPERATURE);
-        rollingTempLows[i] = createInvalidRecord(TEMPERATURE);
-        rollingHumidHighs[i] = createInvalidRecord(HUMIDITY);
-        rollingHumidLows[i] = createInvalidRecord(HUMIDITY);
+        rollingTempHighs[i] = createInvalidHighRecord(TEMPERATURE);
+        rollingTempLows[i] = createInvalidLowRecord(TEMPERATURE);
+        rollingHumidHighs[i] = createInvalidHighRecord(HUMIDITY);
+        rollingHumidLows[i] = createInvalidLowRecord(HUMIDITY);
     }
     
     Serial.println("RecordManager initialized with rolling records");
@@ -33,59 +39,123 @@ void RecordManager::initRecords() {
 Record RecordManager::createInvalidRecord(SensorType type) {
     Record invalid;
     invalid.sensorType = type;
-    // Use extremely high values for invalid records so they get replaced by any real reading
-    invalid.value = (type == TEMPERATURE) ? 999.0 : 999.0; // Very high invalid values
     invalid.dateTime = DateTime(2000, 1, 1, 0, 0, 0); // Invalid date
+    
+    // For temperature: use very high value for lows, very low value for highs
+    // For humidity: use very high value for lows, very low value for highs
+    if (type == TEMPERATURE) {
+        invalid.value = 999.0; // This will work for both high and low initialization
+    } else { // HUMIDITY
+        invalid.value = 999.0; // This will work for both high and low initialization
+    }
+    
+    return invalid;
+}
+
+Record RecordManager::createInvalidLowRecord(SensorType type) {
+    Record invalid;
+    invalid.sensorType = type;
+    invalid.value      = std::numeric_limits<float>::max();  // Infinity sentinel
+    invalid.dateTime   = DateTime(2000,1,1,0,0,0);
+    return invalid;
+}
+
+Record RecordManager::createInvalidHighRecord(SensorType type) {
+    Record invalid;
+    invalid.sensorType = type;
+    invalid.value      = -std::numeric_limits<float>::max(); // -infinity sentinel
+    invalid.dateTime   = DateTime(2000,1,1,0,0,0);
     return invalid;
 }
 
 void RecordManager::analyzeReading(SensorType sensorType, float value, DateTime dateTime) {
+    // Force initialization if still at 0
+    if (lowTempOfTheDay.value == 0) {
+        lowTempOfTheDay.value = std::numeric_limits<float>::max();
+        lowTempOfTheDay.dateTime = dateTime;
+    }
+    
+    if (lowHumidOfTheDay.value == 0) {
+        lowHumidOfTheDay.value = std::numeric_limits<float>::max();
+        lowHumidOfTheDay.dateTime = dateTime;
+    }
+    
+    if (lowTempOfTheWeek.value == 0) {
+        lowTempOfTheWeek.value = std::numeric_limits<float>::max();
+        lowTempOfTheWeek.dateTime = dateTime;
+    }
+    
+    if (lowHumidOfTheWeek.value == 0) {
+        lowHumidOfTheWeek.value = std::numeric_limits<float>::max();
+        lowHumidOfTheWeek.dateTime = dateTime;
+    }
+    
     // Check for expired records and update rolling
     if (isNewDay(dateTime, highTempOfTheDay.dateTime)) {
-        updateRollingDailyRecords(dateTime);
+        // Reset daily records for new day
+        highTempOfTheDay = createInvalidHighRecord(TEMPERATURE);
+        lowTempOfTheDay = createInvalidLowRecord(TEMPERATURE);
+        highHumidOfTheDay = createInvalidHighRecord(HUMIDITY);
+        lowHumidOfTheDay = createInvalidLowRecord(HUMIDITY);
     }
     
     if (isNewWeek(dateTime, highTempOfTheWeek.dateTime)) {
-        updateRollingWeeklyRecords(dateTime);
+        // Reset weekly records for new week
+        highTempOfTheWeek = createInvalidHighRecord(TEMPERATURE);
+        lowTempOfTheWeek = createInvalidLowRecord(TEMPERATURE);
+        highHumidOfTheWeek = createInvalidHighRecord(HUMIDITY);
+        lowHumidOfTheWeek = createInvalidLowRecord(HUMIDITY);
     }
     
     // Add to rolling buffer first
     addToRollingBuffer(sensorType, value, dateTime);
     
+    
     // Update current records based on sensor type
     switch (sensorType) {
         case TEMPERATURE:
             // Daily temperature records
-            if (highTempOfTheDay.value == 999.0 || value > highTempOfTheDay.value) {
+            if (highTempOfTheDay.value == -std::numeric_limits<float>::max() || value > highTempOfTheDay.value) {
                 updateRecord(highTempOfTheDay, value, dateTime, true);
+                Serial.print("Updated daily high temp to: ");
+                Serial.println(value);
             }
-            if (lowTempOfTheDay.value == 999.0 || value < lowTempOfTheDay.value) {
+            
+            // Force update if still at default value or new low
+            if (lowTempOfTheDay.value == std::numeric_limits<float>::max() || value < lowTempOfTheDay.value) {
                 updateRecord(lowTempOfTheDay, value, dateTime, false);
+                Serial.print("Updated daily low temp to: ");
+                Serial.println(value);
             }
             
             // Weekly temperature records
-            if (highTempOfTheWeek.value == 999.0 || value > highTempOfTheWeek.value) {
+            if (highTempOfTheWeek.value == -std::numeric_limits<float>::max() || value > highTempOfTheWeek.value) {
                 updateRecord(highTempOfTheWeek, value, dateTime, true);
             }
-            if (lowTempOfTheWeek.value == 999.0 || value < lowTempOfTheWeek.value) {
+            
+            if (lowTempOfTheWeek.value == std::numeric_limits<float>::max() || value < lowTempOfTheWeek.value) {
                 updateRecord(lowTempOfTheWeek, value, dateTime, false);
+                Serial.print("Updated weekly low temp to: ");
+                Serial.println(value);
             }
             break;
             
         case HUMIDITY:
             // Daily humidity records
-            if (highHumidOfTheDay.value == 999.0 || value > highHumidOfTheDay.value) {
+            if (highHumidOfTheDay.value == -std::numeric_limits<float>::max() || value > highHumidOfTheDay.value) {
                 updateRecord(highHumidOfTheDay, value, dateTime, true);
             }
-            if (lowHumidOfTheDay.value == 999.0 || value < lowHumidOfTheDay.value) {
+            if (lowHumidOfTheDay.value == std::numeric_limits<float>::max() || value < lowHumidOfTheDay.value) {
                 updateRecord(lowHumidOfTheDay, value, dateTime, false);
+                Serial.print("Updated daily low humidity to: ");
+                Serial.println(value);
             }
             
             // Weekly humidity records
-            if (highHumidOfTheWeek.value == 999.0 || value > highHumidOfTheWeek.value) {
+            if (highHumidOfTheWeek.value == -std::numeric_limits<float>::max() || value > highHumidOfTheWeek.value) {
                 updateRecord(highHumidOfTheWeek, value, dateTime, true);
             }
-            if (lowHumidOfTheWeek.value == 999.0 || value < lowHumidOfTheWeek.value) {
+            if (lowHumidOfTheWeek.value == std::numeric_limits<float>::max() || value < lowHumidOfTheWeek.value) {
                 updateRecord(lowHumidOfTheWeek, value, dateTime, false);
             }
             break;
@@ -111,7 +181,7 @@ void RecordManager::addToRollingBuffer(SensorType sensorType, float value, DateT
 }
 
 void RecordManager::addToBuffer(Record buffer[], const Record& newRecord, int bufferSize) {
-    // Shift all records down by one position
+    // Shift all records down to one position
     for (int i = bufferSize - 1; i > 0; i--) {
         buffer[i] = buffer[i - 1];
     }
@@ -152,23 +222,26 @@ void RecordManager::updateRollingWeeklyRecords(DateTime currentTime) {
 }
 
 Record RecordManager::findBestInTimeRange(Record buffer[], DateTime currentTime, int daysBack, bool findHigh, SensorType type) {
-    Record best = createInvalidRecord(type);
+    Record best;
+    if (findHigh) {
+        best = createInvalidHighRecord(type); // Initialize with very low value
+    } else {
+        best = createInvalidLowRecord(type);  // Initialize with very high value
+    }
+    
     long cutoffTime = currentTime.unixtime() - (daysBack * 86400);
     
     for (int i = 0; i < MAX_ROLLING_RECORDS; i++) {
-        // Skip invalid records
-        if (buffer[i].value == 999.0) continue;
+        // Skip invalid or empty records
+        if (buffer[i].dateTime.year() < 2020) continue; // Skip records with invalid dates
         
         // Skip records older than cutoff
         if (buffer[i].dateTime.unixtime() < cutoffTime) continue;
         
-        // Check if this is a better record
-        if (best.value == 999.0) {
-            best = buffer[i]; // First valid record found
-        } else if (findHigh && buffer[i].value > best.value) {
-            best = buffer[i]; // New high found
-        } else if (!findHigh && buffer[i].value < best.value) {
-            best = buffer[i]; // New low found
+        // For first valid record or better records
+        if ((findHigh && (best.value == -std::numeric_limits<float>::max() || buffer[i].value > best.value)) ||
+            (!findHigh && (best.value == std::numeric_limits<float>::max() || buffer[i].value < best.value))) {
+            best = buffer[i];
         }
     }
     
@@ -192,13 +265,15 @@ void RecordManager::updateRecord(Record& record, float value, DateTime dateTime,
     // Optional: Print when a new record is set
     String typeStr = (record.sensorType == TEMPERATURE) ? "Temperature" : "Humidity";
     String recordStr = isHigh ? "High" : "Low";
+    String unit = (record.sensorType == TEMPERATURE) ? "F" : "%"; // Changed from "C" to "F" since you're using Fahrenheit
+    
     Serial.print("New ");
     Serial.print(recordStr);
     Serial.print(" ");
     Serial.print(typeStr);
     Serial.print(": ");
     Serial.print(value, 1);
-    Serial.print((record.sensorType == TEMPERATURE) ? "C" : "%");
+    Serial.print(unit);
     Serial.print(" at ");
     Serial.print(dateTime.year());
     Serial.print("-");
@@ -248,9 +323,9 @@ void RecordManager::printRecords() {
     
     Serial.println("DAILY RECORDS:");
     Serial.print("High Temp: ");
-    if (highTempOfTheDay.value != 999.0) {
+    if (highTempOfTheDay.value != -999.0 && highTempOfTheDay.value != 999.0) {
         Serial.print(highTempOfTheDay.value, 1);
-        Serial.print("C (");
+        Serial.print("F (");  // Changed from "C" to "F"
         printDateTime(highTempOfTheDay.dateTime);
         Serial.println(")");
     } else {
@@ -258,9 +333,9 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Temp: ");
-    if (lowTempOfTheDay.value != 999.0) {
+    if (lowTempOfTheDay.value != std::numeric_limits<float>::max()) {
         Serial.print(lowTempOfTheDay.value, 1);
-        Serial.print("C (");
+        Serial.print("F (");
         printDateTime(lowTempOfTheDay.dateTime);
         Serial.println(")");
     } else {
@@ -268,7 +343,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("High Humidity: ");
-    if (highHumidOfTheDay.value != 999.0) {
+    if (highHumidOfTheDay.value != -999.0 && highHumidOfTheDay.value != 999.0) {
         Serial.print(highHumidOfTheDay.value, 1);
         Serial.print("% (");
         printDateTime(highHumidOfTheDay.dateTime);
@@ -278,7 +353,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Humidity: ");
-    if (lowHumidOfTheDay.value != 999.0) {
+    if (lowHumidOfTheDay.value != std::numeric_limits<float>::max()) {
         Serial.print(lowHumidOfTheDay.value, 1);
         Serial.print("% (");
         printDateTime(lowHumidOfTheDay.dateTime);
@@ -289,9 +364,9 @@ void RecordManager::printRecords() {
     
     Serial.println("WEEKLY RECORDS:");
     Serial.print("High Temp: ");
-    if (highTempOfTheWeek.value != 999.0) {
+    if (highTempOfTheWeek.value != -999.0 && highTempOfTheWeek.value != 999.0) {
         Serial.print(highTempOfTheWeek.value, 1);
-        Serial.print("C (");
+        Serial.print("F (");  // Changed from "C" to "F"
         printDateTime(highTempOfTheWeek.dateTime);
         Serial.println(")");
     } else {
@@ -299,9 +374,9 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Temp: ");
-    if (lowTempOfTheWeek.value != 999.0) {
+    if (lowTempOfTheWeek.value != std::numeric_limits<float>::max()) {
         Serial.print(lowTempOfTheWeek.value, 1);
-        Serial.print("C (");
+        Serial.print("F (");  // Changed from "C" to "F"
         printDateTime(lowTempOfTheWeek.dateTime);
         Serial.println(")");
     } else {
@@ -309,7 +384,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("High Humidity: ");
-    if (highHumidOfTheWeek.value != 999.0) {
+    if (highHumidOfTheWeek.value != -999.0 && highHumidOfTheWeek.value != 999.0) {
         Serial.print(highHumidOfTheWeek.value, 1);
         Serial.print("% (");
         printDateTime(highHumidOfTheWeek.dateTime);
@@ -319,7 +394,7 @@ void RecordManager::printRecords() {
     }
     
     Serial.print("Low Humidity: ");
-    if (lowHumidOfTheWeek.value != 999.0) {
+    if (lowHumidOfTheWeek.value != std::numeric_limits<float>::max()) {
         Serial.print(lowHumidOfTheWeek.value, 1);
         Serial.print("% (");
         printDateTime(lowHumidOfTheWeek.dateTime);
@@ -342,35 +417,35 @@ void RecordManager::printDateTime(const DateTime& dt) {
 
 // Getter methods - Updated to check for invalid values
 float RecordManager::getHighTempDaily() const {
-    return (highTempOfTheDay.value != 999.0) ? highTempOfTheDay.value : NAN;
+    return (highTempOfTheDay.value != -std::numeric_limits<float>::max()) ? highTempOfTheDay.value : NAN;
 }
 
 float RecordManager::getLowTempDaily() const {
-    return (lowTempOfTheDay.value != 999.0) ? lowTempOfTheDay.value : NAN;
+    return (lowTempOfTheDay.value != std::numeric_limits<float>::max()) ? lowTempOfTheDay.value : NAN;
 }
 
 float RecordManager::getHighHumidDaily() const {
-    return (highHumidOfTheDay.value != 999.0) ? highHumidOfTheDay.value : NAN;
+    return (highHumidOfTheDay.value != -std::numeric_limits<float>::max()) ? highHumidOfTheDay.value : NAN;
 }
 
 float RecordManager::getLowHumidDaily() const {
-    return (lowHumidOfTheDay.value != 999.0) ? lowHumidOfTheDay.value : NAN;
+    return (lowHumidOfTheDay.value != std::numeric_limits<float>::max()) ? lowHumidOfTheDay.value : NAN;
 }
 
 float RecordManager::getHighTempWeekly() const {
-    return (highTempOfTheWeek.value != 999.0) ? highTempOfTheWeek.value : NAN;
+    return (highTempOfTheWeek.value != -std::numeric_limits<float>::max()) ? highTempOfTheWeek.value : NAN;
 }
 
 float RecordManager::getLowTempWeekly() const {
-    return (lowTempOfTheWeek.value != 999.0) ? lowTempOfTheWeek.value : NAN;
+    return (lowTempOfTheWeek.value != std::numeric_limits<float>::max()) ? lowTempOfTheWeek.value : NAN;
 }
 
 float RecordManager::getHighHumidWeekly() const {
-    return (highHumidOfTheWeek.value != 999.0) ? highHumidOfTheWeek.value : NAN;
+    return (highHumidOfTheWeek.value != -std::numeric_limits<float>::max()) ? highHumidOfTheWeek.value : NAN;
 }
 
 float RecordManager::getLowHumidWeekly() const {
-    return (lowHumidOfTheWeek.value != 999.0) ? lowHumidOfTheWeek.value : NAN;
+    return (lowHumidOfTheWeek.value != std::numeric_limits<float>::max()) ? lowHumidOfTheWeek.value : NAN;
 }
 
 

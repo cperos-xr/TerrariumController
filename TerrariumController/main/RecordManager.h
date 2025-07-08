@@ -2,6 +2,7 @@
 #define RECORDMANAGER_H
 #include <Arduino.h>
 #include <RTClib.h>  // Add this include for DateTime
+#include <limits>
 
 #define MAX_ROLLING_RECORDS 20
 
@@ -76,6 +77,8 @@ class RecordManager
         void resetDailyRecords(DateTime currentTime);
         void resetWeeklyRecords(DateTime currentTime);
         Record createInvalidRecord(SensorType type);
+        Record createInvalidHighRecord(SensorType type);
+        Record createInvalidLowRecord(SensorType type);
 };
 
 extern RecordManager rcd; // Declare a global RecordManager instance
