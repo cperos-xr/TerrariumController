@@ -97,7 +97,12 @@ void loop()
     Serial.println(rcd.lowHumidOfTheDay.value, 2);
     static unsigned long lastAdvertisingCheck = 0;
     unsigned long currentTime = millis();
-    
+    if (rcd.recordsChanged || currentTime - rcd.lastSaveTime >= 3600000) { // Save if changed or hourly
+        rcd.saveRecordsToEEPROM();
+        rcd.recordsChanged = false; // Reset the flag
+        rcd.lastSaveTime = currentTime; // Update the last save time
+    }
+
     DateTime now = rtc.getCurrentTime();
     float tempC = snr.getCurrentTempC();
     float tempF = snr.getCurrentTempF(); // Get Fahrenheit temp instead
@@ -139,6 +144,4 @@ void loop()
 
     Serial.print("Current Temp C: ");
     Serial.println(tempC);
-
-    rcd.saveRecordsToEEPROM();
 }

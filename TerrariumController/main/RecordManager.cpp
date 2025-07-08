@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 // Constructor
-RecordManager::RecordManager() {
+RecordManager::RecordManager() : lastSaveTime(0) {
     initRecords();
 }
 
@@ -269,7 +269,7 @@ void RecordManager::updateRecord(Record& record, float value, DateTime dateTime,
     // Optional: Print when a new record is set
     String typeStr = (record.sensorType == TEMPERATURE) ? "Temperature" : "Humidity";
     String recordStr = isHigh ? "High" : "Low";
-    String unit = (record.sensorType == TEMPERATURE) ? "F" : "%"; // Changed from "C" to "F" since you're using Fahrenheit
+    String unit = (record.sensorType == TEMPERATURE) ? "C" : "%";
     
     Serial.print("New ");
     Serial.print(recordStr);
@@ -288,6 +288,13 @@ void RecordManager::updateRecord(Record& record, float value, DateTime dateTime,
     Serial.print(dateTime.hour());
     Serial.print(":");
     Serial.println(dateTime.minute());
+
+    if (record.value != value || record.dateTime != dateTime)
+    {
+        record.value = value;
+        record.dateTime = dateTime;
+        recordsChanged = true; // Mark records as changed
+    }
 }
 
 bool RecordManager::isNewDay(const DateTime& current, const DateTime& recorded) {

@@ -64,12 +64,14 @@ class RecordManager
         float getLowTempWeekly() const;
         float getHighHumidWeekly() const;
         float getLowHumidWeekly() const;
-
+        bool recordsChanged = false;
+        unsigned long lastSaveTime = 0; // Timestamp of the last save
         String getCurrentRecordsAsJSON() const;
 
 
 
     private:
+        
         // Rolling buffers for maintaining recent records
         Record rollingTempHighs[MAX_ROLLING_RECORDS];
         Record rollingTempLows[MAX_ROLLING_RECORDS];
