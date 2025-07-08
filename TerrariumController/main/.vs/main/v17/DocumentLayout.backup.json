@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RecordManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RecordManager.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\main.ino||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:main.ino||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.cpp||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RecordManager.cpp||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RecordManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\SensorManager.h||{3B902123-F8A7-4915-9F01-361F908088D0}",
@@ -62,7 +62,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -74,28 +74,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "RecordManager.cpp",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.cpp",
               "RelativeDocumentMoniker": "RecordManager.cpp",
               "ToolTip": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.cpp",
               "RelativeToolTip": "RecordManager.cpp",
-              "ViewState": "AgIAAJcBAAAAAAAAAAAowNMBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAL8BAAAAAAAAAAAswOIBAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-07-07T10:45:30.437Z",
+              "WhenOpened": "2025-07-08T03:33:34.662Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "RecordManager.h",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.h",
               "RelativeDocumentMoniker": "RecordManager.h",
               "ToolTip": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\RecordManager.h",
               "RelativeToolTip": "RecordManager.h",
-              "ViewState": "AgIAABcAAAAAAAAAAAAowFMAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T10:00:35.57Z",
+              "WhenOpened": "2025-07-08T03:33:33.981Z",
               "EditorCaption": ""
             },
             {
@@ -108,8 +108,7 @@
               "RelativeToolTip": "SensorManager.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T06:45:15.257Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T06:45:15.257Z"
             },
             {
               "$type": "Document",
@@ -121,18 +120,17 @@
               "RelativeToolTip": "SensorManager.cpp",
               "ViewState": "AgIAALgAAAAAAAAAAAAowPQAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-07-07T06:44:55.204Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T06:44:55.204Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "main.ino",
               "DocumentMoniker": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\main.ino",
               "RelativeDocumentMoniker": "main.ino",
               "ToolTip": "C:\\Users\\cpero\\Documents\\GitHub\\TerrariumController\\TerrariumController\\main\\main.ino",
               "RelativeToolTip": "main.ino",
-              "ViewState": "AgIAAEcAAAAAAAAAAAAowGoAAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAACIAAAAAAAAAAAAmwEMAAAAFAAAAAAAAAA==",
               "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKcSURBVDhPlZM9aJ1lGIav532/JCc1vybHQygkLbE1UaiDhSKoiIsgWCkOFkTt4qq4iJ0Et3ZwLnTooLgqODgJDoI0bY0JBNtFRQ8k7cnJOeZ8Od/3/j4OdZDQFrzgWh7u\u002B94eiTnz\u002BeYWy1OT0/eq6tmgeY5HUIjpzTcamzc7u3uXz5xWufjTGs3xxurdqro0jOlFRRuHS/9FwI3b4voT441P/izLdbmyuTW10e1\u002B0ff\u002BbFY9nH8gIsL06Oj3qzMz5\u002BWDH3586fdy8E2d0qwgh7MPQRk1tlyamDhvOlU1163deN979pxjt67v62p63tHzjl33762u2XOOnvd0nRvrVNW86TvHfoj0faSwlteWFrmwcpLnmk2GMVHGxKm5Od5bOcnrx5ZoFAV9H9kPgb7zmDIEhikyZg0frj7Fk6J0drZ5o9Xkwoll3l4\u002BzlsLLfp3d1gk89HTK0wU9v54CBiXEiFnTs3OkIYHXLl9hxvlAZd\u002B/oVnHjvC81MTXL5xk7\u002BN5cvf/qB/UHJ6dpqQEz4ljMsZVYUYKVNCbEHDe4IIA\u002B8ZOI8fHaPwDlKiDJHsHKqKyxkTUkJU2ex2Ue959egC05OTvHt8iTvtNrfabd45tkgvJV5YaHHEO27d62CAkBN29uy51aT5zSqm4tfuLo\u002BnSAtY397mu06XjXJIPRiwOFKwPxjw9V9tOmIwItmofivLV6\u002BdC6pfAQ1VJaeIpIxaiyksIOSUkBRRBBkpMGIAwojI\u002B0ZD6EkINSEgMWIVjDFYVSREJARszhgxWBFMTBACEoLPIfSMhrCB99dxjv/pOiGs2cmXX6nJeUtjPKExtjRG0RiTxpgfoGqMjpTWUP04eX9bjn76GRQFqDZRzoDOAw/7KgHZQ1hDzA4p8g/ekLaPdv13DwAAAABJRU5ErkJggg==",
               "WhenOpened": "2025-07-07T05:03:00.771Z",
               "EditorCaption": ""
@@ -159,8 +157,7 @@
               "RelativeToolTip": "RTCManager.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T03:55:36.661Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:36.661Z"
             },
             {
               "$type": "Document",
@@ -172,8 +169,7 @@
               "RelativeToolTip": "RTCManager.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-07-07T03:55:30.754Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:30.754Z"
             },
             {
               "$type": "Document",
@@ -185,8 +181,7 @@
               "RelativeToolTip": "BluetoothManager.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAIYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-07-07T03:55:09.711Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:09.711Z"
             },
             {
               "$type": "Document",
@@ -198,8 +193,7 @@
               "RelativeToolTip": "BluetoothManager.h",
               "ViewState": "AgIAABAAAAAAAAAAAAAowEwAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-07-07T03:55:24.309Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-07T03:55:24.309Z"
             },
             {
               "$type": "Document",

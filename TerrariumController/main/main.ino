@@ -65,6 +65,8 @@ void setup()
       Serial.println("Display initialization finished."); // Debug message
   }
 
+  rcd.loadRecordsFromEEPROM();
+
   Serial.println("Scanning for I2C devices...");
   for (byte address = 1; address < 127; address++)
   {
@@ -137,4 +139,6 @@ void loop()
 
     Serial.print("Current Temp C: ");
     Serial.println(tempC);
+
+    rcd.saveRecordsToEEPROM();
 }

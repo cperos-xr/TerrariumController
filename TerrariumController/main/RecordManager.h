@@ -3,8 +3,17 @@
 #include <Arduino.h>
 #include <RTClib.h>  // Add this include for DateTime
 #include <limits>
+#include <EEPROM.h>
 
 #define MAX_ROLLING_RECORDS 20
+#define EEPROM_MAGIC 0x42
+#define EEPROM_MAGIC_ADDR 0
+#define EEPROM_SIZE (MAX_ROLLING_RECORDS * sizeof(Record) * 4) // 4 buffers
+
+//static const int EEPROM_SIZE            = 1024;    // adjust to fit your data
+
+static const int EEPROM_ADDR_RECORDS    =   0;     // start of record data
+
 
 enum SensorType
 {
@@ -28,7 +37,7 @@ class RecordManager
         
         // Weekly records
         Record highTempOfTheWeek;
-        Record lowTempOfTheWeek;  // Fixed: was "lowTemp"
+        Record lowTempOfTheWeek;
         Record highHumidOfTheWeek;
         Record lowHumidOfTheWeek;
 
@@ -43,6 +52,9 @@ class RecordManager
         void clearRecords();
         void printRecords();
 
+        void saveRecordsToEEPROM();
+        void loadRecordsFromEEPROM();
+
         float getHighTempDaily() const;
         float getLowTempDaily() const;
         float getHighHumidDaily() const;
@@ -54,6 +66,8 @@ class RecordManager
         float getLowHumidWeekly() const;
 
         String getCurrentRecordsAsJSON() const;
+
+
 
     private:
         // Rolling buffers for maintaining recent records
