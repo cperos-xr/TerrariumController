@@ -26,48 +26,52 @@ ScheduleType TaskScheduler::parseType(const String& s) {
 
 // Parse a comma-separated command and update the appropriate schedule
 void TaskScheduler::parseAndSetSchedule(const String& cmd) {
-  String parts[8];
-  int count = 0;
-  int start = 0;
+    String parts[8];
+    int count = 0;
+    int start = 0;
 
-  // Split by comma
-  for (int i = 0; i <= cmd.length() && count < 8; ++i) {
-    if (i == cmd.length() || cmd[i] == ',') {
-      parts[count++] = cmd.substring(start, i);
-      start = i + 1;
+    // Split by comma
+    for (int i = 0; i <= cmd.length() && count < 8; ++i) {
+        if (i == cmd.length() || cmd[i] == ',') {
+            parts[count++] = cmd.substring(start, i);
+            start = i + 1;
+        }
     }
-  }
 
-  if (count < 5) {
-    Serial.println("Invalid command format");
-    return;
-  }
+    if (count < 5) {
+        Serial.println("Invalid command format");
+        return;
+    }
 
-  Schedule sch;
-  sch.type      = parseType(parts[1]);
-  sch.hour1     = parts[2].toInt();
-  sch.minute1   = parts[3].toInt();
-  sch.duration1 = parts[4].toInt() * 1000;  // seconds → milliseconds
+    Schedule sch;
+    sch.type      = parseType(parts[1]);
+    sch.hour1     = parts[2].toInt();
+    sch.minute1   = parts[3].toInt();
+    sch.duration1 = parts[4].toInt() * 1000;  // seconds → milliseconds
 
-  // Handle second time for TWICE_* schedules
-  if ((sch.type == TWICE_DAILY || sch.type == TWICE_WEEKLY || sch.type == TWICE_MONTHLY) && count >= 7) {
-    sch.hour2     = parts[5].toInt();
-    sch.minute2   = parts[6].toInt();
-    sch.duration2 = sch.duration1;
-  }
+    // Handle second time for TWICE_* schedules
+    if ((sch.type == TWICE_DAILY || sch.type == TWICE_WEEKLY || sch.type == TWICE_MONTHLY) && count >= 7) {
+        sch.hour2     = parts[5].toInt();
+        sch.minute2   = parts[6].toInt();
+        sch.duration2 = sch.duration1;
+    }
 
-  // Assign to LIGHT or WATER schedule
-  if (parts[0] == "LIGHT") {
-    lightSchedule = sch;
-    Serial.println("Light schedule updated.");
-  }
-  else if (parts[0] == "WATER") {
-    waterSchedule = sch;
-    Serial.println("Water schedule updated.");
-  }
-  else {
-    Serial.println("Unknown target. Use LIGHT or WATER.");
-  }
+    // Assign to LIGHT or WATER schedule
+    if (parts[0] == "LIGHT") {
+        lightSchedule = sch;
+        Serial.println("Light schedule updated.");
+    }
+    else if (parts[0] == "WATER") {
+        waterSchedule = sch;
+        Serial.println("Water schedule updated.");
+    }
+    else {
+        Serial.println("Unknown target. Use LIGHT or WATER.");
+        return;
+    }
+    
+    // Save schedules after update
+    saveSchedules();
 }
 
 // Called every loop to check and trigger tasks
@@ -236,4 +240,55 @@ bool TaskScheduler::matchSchedule(
       break;
   }
   return false;
+}
+
+// Add these new methods to save and load schedules
+
+bool TaskScheduler::saveSchedules() {
+    File f = LittleFS.open(SCHEDULE_FILE, "w");
+    if (!f) {
+        Serial.println("❌ Failed to open schedule file for write");
+        return false;
+    }
+
+    // Write light schedule
+    f.write((uint8_t*)&lightSchedule, sizeof(Schedule));
+    
+    // Write water schedule
+    f.write((uint8_t*)&waterSchedule, sizeof(Schedule));
+
+    f.close();
+    Serial.println("✅ Schedules saved to LittleFS");
+    return true;
+}
+
+bool TaskScheduler::loadSchedules() {
+    if (!LittleFS.exists(SCHEDULE_FILE)) {
+        Serial.println("ℹ️ No schedule file found, using defaults");
+        return false;
+    }
+
+    File f = LittleFS.open(SCHEDULE_FILE, "r");
+    if (!f) {
+        Serial.println("❌ Failed to open schedule file for read");
+        return false;
+    }
+
+    // Read light schedule
+    f.read((uint8_t*)&lightSchedule, sizeof(Schedule));
+    
+    // Read water schedule
+    f.read((uint8_t*)&waterSchedule, sizeof(Schedule));
+
+    f.close();
+    Serial.println("✅ Schedules loaded from LittleFS");
+    
+    // Debug output
+    Serial.println("Loaded schedules:");
+    Serial.print("Light: ");
+    Serial.println(scheduleToString(lightSchedule, "LIGHT"));
+    Serial.print("Water: ");
+    Serial.println(scheduleToString(waterSchedule, "WATER"));
+    
+    return true;
 }

@@ -79,6 +79,7 @@ void setup()
   }
 
   rcd.loadRecords();
+  scheduler.loadSchedules(); // Load saved schedules
 
   Serial.println("Scanning for I2C devices...");
   for (byte address = 1; address < 127; address++)

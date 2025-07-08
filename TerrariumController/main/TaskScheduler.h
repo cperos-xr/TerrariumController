@@ -3,6 +3,10 @@
 #define TASKSCHEDULER_H
 #include <Arduino.h>
 #include <RTClib.h>
+#include <LittleFS.h>
+
+// Add this constant for the schedule file
+static const char* SCHEDULE_FILE = "/schedules.bin";
 
 enum ScheduleType { NONE, ALWAYS_ON, DAILY, WEEKLY, TWICE_DAILY, TWICE_WEEKLY, MONTHLY, TWICE_MONTHLY };
 
@@ -17,12 +21,16 @@ public:
     void parseAndSetSchedule(const String& cmd);
     void updateTasks(const DateTime& now);
     String getSchedulesAsString();
+    
+    // Add these methods for schedule persistence
+    bool saveSchedules();
+    bool loadSchedules();
 
 private:
     int lightPin, waterPin;
     Schedule lightSchedule, waterSchedule;
     bool lightRunning, waterRunning;
-    unsigned long lightOffMillis, waterOffMillis; // Add these fields
+    unsigned long lightOffMillis, waterOffMillis;
     void applySchedule(const Schedule&, int, bool&, unsigned long&, const DateTime&);
     void executeTask(int, int, bool&, unsigned long&);
     bool matchSchedule(const DateTime&, const Schedule&, bool&);
