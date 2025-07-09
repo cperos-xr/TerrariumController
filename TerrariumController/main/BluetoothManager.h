@@ -24,6 +24,7 @@ private:
     BLEService* pService;
     BLECharacteristic* pRxWater;
     BLECharacteristic* pRtcTime;
+    BLECharacteristic* pRtcWrite; 
     BLECharacteristic* pScheduleRead;
     BLECharacteristic* pSensorRead;
     BLECharacteristic* pRecordRead;
@@ -46,6 +47,15 @@ class RTCReadCallback : public BLECharacteristicCallbacks {
 public:
     RTCReadCallback(RTCManager* rtcMgr);
     void onRead(BLECharacteristic* pCharacteristic) override;
+
+private:
+    RTCManager* rtc;
+};
+
+class RTCWriteCallback : public BLECharacteristicCallbacks {
+public:
+    RTCWriteCallback(RTCManager* rtcMgr);
+    void onWrite(BLECharacteristic* pCharacteristic) override;
 
 private:
     RTCManager* rtc;
