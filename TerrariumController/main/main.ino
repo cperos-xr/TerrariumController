@@ -51,7 +51,7 @@ void setup()
   Serial.println("LittleFS mounted");
   rcd.initRecords();
   Serial.println("Setup started..."); // Debug message
-  while (!Serial); // Wait for serial to be ready
+  //while (!Serial); // Wait for serial to be ready
   Wire.begin(SDA_PIN, SCL_PIN);
   
   if (rtc.isRTCAvailable())
