@@ -1,0 +1,262 @@
+using UnityEngine;
+using TMPro;
+using System;
+using System.Text;
+
+public class TerrariumBleController : MonoBehaviour
+{
+    public static TerrariumBleController Instance { get; private set; }
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this.gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(this.gameObject);
+    }
+
+    [Header("BLE Device Info")]
+    public string DeviceName = "TerrariumController";
+    public string ServiceUUID = "12345678-1234-5678-1234-56789abcdef0";
+
+    [Header("Characteristic UUIDs")]
+    public string ReadRTCUUID = "12345678-1234-5678-1234-56789abcdef4";
+    public string WriteRTCUUID = "12345678-1234-5678-1234-56789abcdefa";
+    public string ReadSensorUUID = "12345678-1234-5678-1234-56789abcdef6";
+    public string ReadRecordsUUID = "12345678-1234-5678-1234-56789abcdef7";
+    public string WriteScheduleUUID = "12345678-1234-5678-1234-56789abcdef3";
+    public string ReadSchedulesUUID = "12345678-1234-5678-1234-56789abcdef5";
+    public string ClearSchedulesUUID = "12345678-1234-5678-1234-56789abcdef8";
+    public string ClearRecordsUUID = "12345678-1234-5678-1234-56789abcdef9";
+
+    [Header("UI Elements (assign in Inspector)")]
+    public TextMeshProUGUI statusText;
+    public TextMeshProUGUI outputText;
+
+    private string _deviceAddress;
+    private bool _serviceDiscovered;
+    private bool _mtuDone;
+
+    private string _rtcString = "";
+    private string _sensorJson = "";
+    private string _recordsJson = "";
+    private string _schedulesString = "";
+
+    public delegate void Connection();
+    public static event Connection OnConnectionComplete;
+
+    void Start()
+    {
+        InitBLE();
+    }
+
+    public void InitBLE()
+    {
+        statusText.text = "Initializing BLE...";
+        BluetoothLEHardwareInterface.Initialize(
+            true, false,
+            InitComplete,
+            InitError
+        );
+    }
+
+    void InitComplete()
+    {
+        statusText.text = "Scanning for " + DeviceName;
+        BluetoothLEHardwareInterface.ScanForPeripheralsWithServices(
+            null,
+            PeripheralFound,
+            null,
+            false
+        );
+    }
+
+    void InitError(string error)
+    {
+        statusText.text = "Init error: " + error;
+    }
+
+    void PeripheralFound(string address, string name)
+    {
+        if (name.Contains(DeviceName))
+        {
+            _deviceAddress = address;
+            BluetoothLEHardwareInterface.StopScan();
+            Connect();
+        }
+    }
+
+    void Connect()
+    {
+        statusText.text = "Connecting...";
+        BluetoothLEHardwareInterface.ConnectToPeripheral(
+            _deviceAddress,
+            null,
+            null,
+            ConnectComplete,
+            Disconnect
+        );
+    }
+
+    void ConnectComplete(string address, string serviceUUID, string characteristicUUID)
+    {
+        if (serviceUUID == ServiceUUID && !_serviceDiscovered)
+        {
+            _serviceDiscovered = true;
+            statusText.text = "Service found, requesting MTU...";
+            Debug.Log("Connected to service: " + serviceUUID);
+            BluetoothLEHardwareInterface.RequestMtu(
+                _deviceAddress, 185,
+                MtuComplete
+            );
+        }
+    }
+
+    void MtuComplete(string address, int mtu)
+    {
+        Debug.Log("MTU set to: " + mtu);
+        _mtuDone = true;
+        statusText.text = "Ready";
+        OnConnectionComplete?.Invoke();
+    }
+
+    void Disconnect(string address)
+    {
+        _serviceDiscovered = false;
+        _mtuDone = false;
+        statusText.text = "Disconnected, retrying in 2s...";
+        Invoke("Start", 2f);
+    }
+
+    public void ReadRTC()
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        BluetoothLEHardwareInterface.ReadCharacteristic(
+            _deviceAddress, ServiceUUID, ReadRTCUUID,
+            (chr, bytes) => {
+                _rtcString = Encoding.UTF8.GetString(bytes);
+                outputText.text = "RTC -> " + _rtcString;
+            }
+        );
+    }
+
+    public void ReadSensor()
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        BluetoothLEHardwareInterface.ReadCharacteristic(
+            _deviceAddress, ServiceUUID, ReadSensorUUID,
+            (chr, bytes) => {
+                _sensorJson = Encoding.UTF8.GetString(bytes);
+                outputText.text = "Sensor -> " + _sensorJson;
+            }
+        );
+    }
+
+    public void ReadRecords()
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        BluetoothLEHardwareInterface.ReadCharacteristic(
+            _deviceAddress, ServiceUUID, ReadRecordsUUID,
+            (chr, bytes) => {
+                _recordsJson = Encoding.UTF8.GetString(bytes);
+                outputText.text = "Records -> " + _recordsJson;
+            }
+        );
+    }
+
+    public void ReadSchedules()
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        BluetoothLEHardwareInterface.ReadCharacteristic(
+            _deviceAddress, ServiceUUID, ReadSchedulesUUID,
+            (chr, bytes) => {
+                _schedulesString = Encoding.UTF8.GetString(bytes);
+                outputText.text = "Schedules -> " + _schedulesString;
+            }
+        );
+    }
+
+    public void WriteRTCNow() => WriteRTC(DateTime.Now);
+
+    public void WriteRTC(DateTime dt)
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        var s = dt.ToString("yyyy-MM-dd HH:mm:ss");
+        var data = Encoding.UTF8.GetBytes(s);
+        BluetoothLEHardwareInterface.WriteCharacteristic(
+            _deviceAddress, ServiceUUID, WriteRTCUUID,
+            data, data.Length, true,
+            chr => statusText.text = "RTC set"
+        );
+    }
+
+    public void WriteSchedule(string cmd)
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        var data = Encoding.UTF8.GetBytes(cmd);
+        BluetoothLEHardwareInterface.WriteCharacteristic(
+            _deviceAddress, ServiceUUID, WriteScheduleUUID,
+            data, data.Length, true,
+            chr => statusText.text = "Schedule sent"
+        );
+    }
+
+    public void ClearSchedules()
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        var data = Encoding.UTF8.GetBytes("CLEAR");
+        BluetoothLEHardwareInterface.WriteCharacteristic(
+            _deviceAddress, ServiceUUID, ClearSchedulesUUID,
+            data, data.Length, true,
+            chr => statusText.text = "Schedules cleared"
+        );
+    }
+
+    public void ClearRecords()
+    {
+        if (!_mtuDone) { statusText.text = "Not ready"; return; }
+        var data = Encoding.UTF8.GetBytes("CLEAR");
+        BluetoothLEHardwareInterface.WriteCharacteristic(
+            _deviceAddress, ServiceUUID, ClearRecordsUUID,
+            data, data.Length, true,
+            chr => statusText.text = "Records cleared"
+        );
+    }
+
+    public string GetRawRTCString()
+    {
+        return _rtcString;
+    }
+
+    public DateTime GetRTCDateTime()
+    {
+        if (DateTime.TryParse(_rtcString, out var dt))
+            return dt;
+        throw new InvalidOperationException("RTC not yet read or invalid: " + _rtcString);
+    }
+
+    public SensorData GetSensorData()
+    {
+        if (string.IsNullOrEmpty(_sensorJson))
+            throw new InvalidOperationException("Sensor data not yet read");
+        return JsonUtility.FromJson<SensorData>(_sensorJson);
+    }
+
+    public RecordsResponse GetRecords()
+    {
+        if (string.IsNullOrEmpty(_recordsJson))
+            throw new InvalidOperationException("Records not yet read");
+        return JsonUtility.FromJson<RecordsResponse>(_recordsJson);
+    }
+
+    public string GetCurrentScheduleData()
+    {
+        if (string.IsNullOrEmpty(_schedulesString))
+            throw new InvalidOperationException("Schedules not yet read");
+        return _schedulesString;
+    }
+
+    
+}
