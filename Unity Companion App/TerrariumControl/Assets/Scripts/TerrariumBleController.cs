@@ -76,13 +76,18 @@ public class TerrariumBleController : MonoBehaviour
 
     void InitError(string error)
     {
+        // IMPORTANT: Don't change the status text if we're already connected and ready
+        if (_mtuDone)
+        {
+            // If we're already connected, ignore this error
+            Debug.Log("Ignoring BLE error after successful connection: " + error);
+            return;
+        }
+
         // For the common BLE initialization error, use a more user-friendly message
         if (error.Contains("Failed to read characteristic"))
         {
             statusText.text = "Establishing connection...";
-            
-            // Start a coroutine to update the status text after a delay
-            StartCoroutine(UpdateStatusAfterDelay());
         }
         else
         {
@@ -153,7 +158,8 @@ public class TerrariumBleController : MonoBehaviour
 
     private IEnumerator DelayedConnectionComplete()
     {
-        yield return new WaitForSeconds(3.0f);
+        // Reduce delay from 3.0 to 1.0 seconds
+        yield return new WaitForSeconds(1.0f);
 
         // Now that BLE stack and MTU are stable, update UI:
         statusText.text = "Ready";

@@ -52,8 +52,8 @@ public class SensorUIManager : MonoBehaviour
     
     private IEnumerator InitialSensorReadWithDelay()
     {
-        // Wait longer for BLE to stabilize
-        yield return new WaitForSeconds(3.0f);
+        // Reduce delay from 3.0 to 1.0 seconds
+        yield return new WaitForSeconds(1.0f);
         
         Debug.Log("Attempting to read sensor after delay");
         TerrariumBleController.Instance.ReadSensor();
