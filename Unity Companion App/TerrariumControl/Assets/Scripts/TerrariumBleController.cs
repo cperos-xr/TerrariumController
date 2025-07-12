@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using System;
 using System.Text;
+using System.Collections;
 
 public class TerrariumBleController : MonoBehaviour
 {
@@ -40,7 +41,7 @@ public class TerrariumBleController : MonoBehaviour
     private bool _mtuDone;
 
     private string _rtcString = "";
-    private string _sensorJson = "";
+    public string _sensorJson = "";
     private string _recordsJson = "";
     private string _schedulesString = "";
 
@@ -75,7 +76,31 @@ public class TerrariumBleController : MonoBehaviour
 
     void InitError(string error)
     {
-        statusText.text = "Init error: " + error;
+        // For the common BLE initialization error, use a more user-friendly message
+        if (error.Contains("Failed to read characteristic"))
+        {
+            statusText.text = "Establishing connection...";
+            
+            // Start a coroutine to update the status text after a delay
+            StartCoroutine(UpdateStatusAfterDelay());
+        }
+        else
+        {
+            // For other errors, show the full error message
+            statusText.text = "Init error: " + error;
+        }
+    }
+
+    private IEnumerator UpdateStatusAfterDelay()
+    {
+        // Wait a few seconds for the connection to stabilize
+        yield return new WaitForSeconds(4.0f);
+        
+        // If connection succeeded after the error (which your logs show it does)
+        if (_mtuDone)
+        {
+            statusText.text = "Ready";
+        }
     }
 
     void PeripheralFound(string address, string name)
@@ -118,7 +143,21 @@ public class TerrariumBleController : MonoBehaviour
     {
         Debug.Log("MTU set to: " + mtu);
         _mtuDone = true;
+        
+        // Always update status to Ready when MTU is complete
         statusText.text = "Ready";
+
+        // Add a delay before triggering connection complete
+        StartCoroutine(DelayedConnectionComplete());
+    }
+
+    private IEnumerator DelayedConnectionComplete()
+    {
+        yield return new WaitForSeconds(3.0f);
+
+        // Now that BLE stack and MTU are stable, update UI:
+        statusText.text = "Ready";
+        Debug.Log("BLE connection stabilized, notifying components");
         OnConnectionComplete?.Invoke();
     }
 
@@ -133,25 +172,53 @@ public class TerrariumBleController : MonoBehaviour
     public void ReadRTC()
     {
         if (!_mtuDone) { statusText.text = "Not ready"; return; }
-        BluetoothLEHardwareInterface.ReadCharacteristic(
-            _deviceAddress, ServiceUUID, ReadRTCUUID,
-            (chr, bytes) => {
-                _rtcString = Encoding.UTF8.GetString(bytes);
-                outputText.text = "RTC -> " + _rtcString;
-            }
-        );
+
+        // Silent error handling with retry
+        try
+        {
+            BluetoothLEHardwareInterface.ReadCharacteristic(
+                _deviceAddress, ServiceUUID, ReadRTCUUID,
+                (chr, bytes) =>
+                {
+                    _rtcString = Encoding.UTF8.GetString(bytes);
+                    outputText.text = "RTC -> " + _rtcString;
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            // Log but don't treat as critical error
+            Debug.Log("ReadRTC non-critical error: " + ex.Message);
+
+            // Try once more after a brief delay
+            StartCoroutine(RetryReadAfterDelay("RTC"));
+        }
     }
 
     public void ReadSensor()
     {
         if (!_mtuDone) { statusText.text = "Not ready"; return; }
-        BluetoothLEHardwareInterface.ReadCharacteristic(
-            _deviceAddress, ServiceUUID, ReadSensorUUID,
-            (chr, bytes) => {
-                _sensorJson = Encoding.UTF8.GetString(bytes);
-                outputText.text = "Sensor -> " + _sensorJson;
-            }
-        );
+
+        // Silent error handling with retry
+        try
+        {
+            BluetoothLEHardwareInterface.ReadCharacteristic(
+                _deviceAddress, ServiceUUID, ReadSensorUUID,
+                (chr, bytes) =>
+                {
+                    _sensorJson = Encoding.UTF8.GetString(bytes);
+                    outputText.text = "Sensor -> " + _sensorJson;
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            // Log but don't treat as critical error
+            Debug.Log("ReadSensor non-critical error: " + ex.Message);
+
+            // Try once more after a brief delay
+            StartCoroutine(RetryReadAfterDelay("Sensor"));
+        }
     }
 
     public void ReadRecords()
@@ -159,7 +226,8 @@ public class TerrariumBleController : MonoBehaviour
         if (!_mtuDone) { statusText.text = "Not ready"; return; }
         BluetoothLEHardwareInterface.ReadCharacteristic(
             _deviceAddress, ServiceUUID, ReadRecordsUUID,
-            (chr, bytes) => {
+            (chr, bytes) =>
+            {
                 _recordsJson = Encoding.UTF8.GetString(bytes);
                 outputText.text = "Records -> " + _recordsJson;
             }
@@ -171,7 +239,8 @@ public class TerrariumBleController : MonoBehaviour
         if (!_mtuDone) { statusText.text = "Not ready"; return; }
         BluetoothLEHardwareInterface.ReadCharacteristic(
             _deviceAddress, ServiceUUID, ReadSchedulesUUID,
-            (chr, bytes) => {
+            (chr, bytes) =>
+            {
                 _schedulesString = Encoding.UTF8.GetString(bytes);
                 outputText.text = "Schedules -> " + _schedulesString;
             }
@@ -258,5 +327,41 @@ public class TerrariumBleController : MonoBehaviour
         return _schedulesString;
     }
 
-    
+    private IEnumerator RetryReadAfterDelay(string readType)
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        if (readType == "RTC")
+        {
+            Debug.Log("Automatically retrying RTC read after error");
+            try
+            {
+                BluetoothLEHardwareInterface.ReadCharacteristic(
+                    _deviceAddress, ServiceUUID, ReadRTCUUID,
+                    (chr, bytes) =>
+                    {
+                        _rtcString = Encoding.UTF8.GetString(bytes);
+                        outputText.text = "RTC -> " + _rtcString;
+                    }
+                );
+            }
+            catch { /* Ignore any errors on retry */ }
+        }
+        else if (readType == "Sensor")
+        {
+            Debug.Log("Automatically retrying Sensor read after error");
+            try
+            {
+                BluetoothLEHardwareInterface.ReadCharacteristic(
+                    _deviceAddress, ServiceUUID, ReadSensorUUID,
+                    (chr, bytes) =>
+                    {
+                        _sensorJson = Encoding.UTF8.GetString(bytes);
+                        outputText.text = "Sensor -> " + _sensorJson;
+                    }
+                );
+            }
+            catch { /* Ignore any errors on retry */ }
+        }
+    }
 }

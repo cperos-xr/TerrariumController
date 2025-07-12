@@ -428,6 +428,7 @@ MonoBehaviour:
   ClearRecordsUUID: 12345678-1234-5678-1234-56789abcdef9
   statusText: {fileID: 1694677700}
   outputText: {fileID: 525659800}
+  _sensorJson: 
 --- !u!1 &224600813
 GameObject:
   m_ObjectHideFlags: 0
@@ -1266,7 +1267,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &578381544
 Transform:
   m_ObjectHideFlags: 0
@@ -4608,6 +4609,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentRTCTimeText: {fileID: 2040673536}
+  readRTCButton: {fileID: 1526964555}
 --- !u!4 &1562506978
 Transform:
   m_ObjectHideFlags: 0
@@ -5275,7 +5277,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1752300995
 Transform:
   m_ObjectHideFlags: 0
@@ -5305,6 +5307,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentTemperatureText: {fileID: 1021313744}
   currentHumidityText: {fileID: 1421251334}
+  readSensorButton: {fileID: 0}
+  updateInterval: 3
 --- !u!1 &1767495637
 GameObject:
   m_ObjectHideFlags: 0
