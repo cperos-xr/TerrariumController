@@ -319,3 +319,61 @@ bool TaskScheduler::clearSchedules() {
     Serial.println("✅ All schedules reset to default values");
     return true;
 }
+
+// Add at the end of the file
+
+String TaskScheduler::getSchedulesAsJSON() {
+    String json = "{";
+    
+    // Light schedule
+    json += "\"light\":{";
+    json += "\"type\":\"" + scheduleTypeToString(lightSchedule.type) + "\",";
+    json += "\"hour1\":" + String(lightSchedule.hour1) + ",";
+    json += "\"minute1\":" + String(lightSchedule.minute1) + ",";
+    json += "\"duration1\":" + String(lightSchedule.duration1/1000) + ","; // Convert to seconds
+    
+    // Include second time for TWICE_* schedules
+    if (lightSchedule.type == TWICE_DAILY || lightSchedule.type == TWICE_WEEKLY || lightSchedule.type == TWICE_MONTHLY) {
+        json += "\"hour2\":" + String(lightSchedule.hour2) + ",";
+        json += "\"minute2\":" + String(lightSchedule.minute2) + ",";
+        json += "\"duration2\":" + String(lightSchedule.duration2/1000); // Convert to seconds
+    } else {
+        json += "\"hour2\":0,\"minute2\":0,\"duration2\":0";
+    }
+    json += "},";
+    
+    // Water schedule
+    json += "\"water\":{";
+    json += "\"type\":\"" + scheduleTypeToString(waterSchedule.type) + "\",";
+    json += "\"hour1\":" + String(waterSchedule.hour1) + ",";
+    json += "\"minute1\":" + String(waterSchedule.minute1) + ",";
+    json += "\"duration1\":" + String(waterSchedule.duration1/1000) + ","; // Convert to seconds
+    
+    // Include second time for TWICE_* schedules
+    if (waterSchedule.type == TWICE_DAILY || waterSchedule.type == TWICE_WEEKLY || waterSchedule.type == TWICE_MONTHLY) {
+        json += "\"hour2\":" + String(waterSchedule.hour2) + ",";
+        json += "\"minute2\":" + String(waterSchedule.minute2) + ",";
+        json += "\"duration2\":" + String(waterSchedule.duration2/1000); // Convert to seconds
+    } else {
+        json += "\"hour2\":0,\"minute2\":0,\"duration2\":0";
+    }
+    json += "}";
+    
+    json += "}";
+    return json;
+}
+
+// Helper to convert schedule type to string
+String scheduleTypeToString(ScheduleType type) {
+    switch (type) {
+        case NONE: return "NONE";
+        case ALWAYS_ON: return "ALWAYS_ON";
+        case DAILY: return "DAILY";
+        case WEEKLY: return "WEEKLY";
+        case TWICE_DAILY: return "TWICE_DAILY";
+        case TWICE_WEEKLY: return "TWICE_WEEKLY";
+        case MONTHLY: return "MONTHLY";
+        case TWICE_MONTHLY: return "TWICE_MONTHLY";
+        default: return "UNKNOWN";
+    }
+}

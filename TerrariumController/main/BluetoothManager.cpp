@@ -148,8 +148,8 @@ void RTCReadCallback::onRead(BLECharacteristic* pCharacteristic) {
 ScheduleReadCallback::ScheduleReadCallback(TaskScheduler* sched) : scheduler(sched) {}
 
 void ScheduleReadCallback::onRead(BLECharacteristic* pCharacteristic) {
-    String scheduleInfo = scheduler->getSchedulesAsString();
-    pCharacteristic->setValue(scheduleInfo.c_str());
+    String scheduleJson = scheduler->getSchedulesAsJSON();
+    pCharacteristic->setValue(scheduleJson.c_str());
 }
 
 // SensorReadCallback implementation

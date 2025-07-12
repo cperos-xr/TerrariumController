@@ -365,7 +365,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dayHighTemp: {fileID: 1550682408}
-  dayLowTemp: {fileID: 1296236945}
+  dayLowTemp: {fileID: 44170314}
   dayHighHumidity: {fileID: 1244828689}
   dayLowHumidity: {fileID: 1296236945}
   weekHighTemp: {fileID: 455318206}
@@ -429,6 +429,7 @@ MonoBehaviour:
   statusText: {fileID: 1694677700}
   outputText: {fileID: 525659800}
   _sensorJson: 
+  _schedulesString: 
 --- !u!1 &224600813
 GameObject:
   m_ObjectHideFlags: 0
@@ -863,7 +864,7 @@ GameObject:
   - component: {fileID: 463327450}
   - component: {fileID: 463327449}
   m_Layer: 5
-  m_Name: Daily High
+  m_Name: Frequency
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1298,7 +1299,7 @@ GameObject:
   - component: {fileID: 595091800}
   - component: {fileID: 595091801}
   m_Layer: 5
-  m_Name: High Low Set (Day Temp)
+  m_Name: Water Schedule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2214,7 +2215,7 @@ GameObject:
   - component: {fileID: 831809177}
   - component: {fileID: 831809176}
   m_Layer: 5
-  m_Name: Weekly High Low
+  m_Name: Light Schedule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2348,7 +2349,7 @@ GameObject:
   - component: {fileID: 875129992}
   - component: {fileID: 875129991}
   m_Layer: 5
-  m_Name: Daily Low
+  m_Name: Duration
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2616,7 +2617,7 @@ GameObject:
   - component: {fileID: 1002963544}
   - component: {fileID: 1002963543}
   m_Layer: 5
-  m_Name: Daily Low
+  m_Name: Duration
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3251,7 +3252,7 @@ GameObject:
   - component: {fileID: 1148850974}
   - component: {fileID: 1148850973}
   m_Layer: 5
-  m_Name: Daily High
+  m_Name: Frequency
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3624,7 +3625,7 @@ GameObject:
   - component: {fileID: 1244828690}
   - component: {fileID: 1244828689}
   m_Layer: 5
-  m_Name: Daily High
+  m_Name: Daily High Hum
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4120,7 +4121,7 @@ GameObject:
   - component: {fileID: 1468658744}
   - component: {fileID: 1468658745}
   m_Layer: 5
-  m_Name: High Low Set (Week Temp)
+  m_Name: Light Schedule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5307,7 +5308,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentTemperatureText: {fileID: 1021313744}
   currentHumidityText: {fileID: 1421251334}
-  readSensorButton: {fileID: 0}
+  readSensorButton: {fileID: 544257697}
   updateInterval: 3
 --- !u!1 &1767495637
 GameObject:
@@ -5325,7 +5326,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1767495638
 Transform:
   m_ObjectHideFlags: 0
@@ -5353,10 +5354,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 116b7d7be1a17ea4b8a8ccdff4cff083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waterDuration: {fileID: 0}
-  waterFrequency: {fileID: 0}
-  lightDuration: {fileID: 0}
-  lightFrequency: {fileID: 0}
+  waterDuration: {fileID: 1002963543}
+  waterFrequency: {fileID: 1148850973}
+  lightDuration: {fileID: 875129991}
+  lightFrequency: {fileID: 463327449}
+  readSchedulesButton: {fileID: 435396243}
 --- !u!1 &1824045251
 GameObject:
   m_ObjectHideFlags: 0

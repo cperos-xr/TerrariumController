@@ -10,6 +10,8 @@ static const char* SCHEDULE_FILE = "/schedules.bin";
 
 enum ScheduleType { NONE, ALWAYS_ON, DAILY, WEEKLY, TWICE_DAILY, TWICE_WEEKLY, MONTHLY, TWICE_MONTHLY };
 
+String scheduleTypeToString(ScheduleType type); // Add this function declaration
+
 struct Schedule {
     ScheduleType type;
     int hour1, minute1, duration1, hour2, minute2, duration2;
@@ -21,6 +23,7 @@ public:
     void parseAndSetSchedule(const String& cmd);
     void updateTasks(const DateTime& now);
     String getSchedulesAsString();
+    String getSchedulesAsJSON();
     
     // Add these methods for schedule persistence
     bool saveSchedules();

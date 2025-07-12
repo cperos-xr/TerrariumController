@@ -43,7 +43,7 @@ public class TerrariumBleController : MonoBehaviour
     private string _rtcString = "";
     public string _sensorJson = "";
     private string _recordsJson = "";
-    private string _schedulesString = "";
+    public string _schedulesString = "";
 
     public delegate void Connection();
     public static event Connection OnConnectionComplete;
@@ -331,6 +331,13 @@ public class TerrariumBleController : MonoBehaviour
         if (string.IsNullOrEmpty(_schedulesString))
             throw new InvalidOperationException("Schedules not yet read");
         return _schedulesString;
+    }
+
+    public SchedulesResponse GetSchedules()
+    {
+        if (string.IsNullOrEmpty(_schedulesString))
+            throw new InvalidOperationException("Schedules not yet read");
+        return JsonUtility.FromJson<SchedulesResponse>(_schedulesString);
     }
 
     private IEnumerator RetryReadAfterDelay(string readType)
