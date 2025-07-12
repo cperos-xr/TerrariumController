@@ -67,17 +67,22 @@ public class ScheduleUIManager : MonoBehaviour
             try
             {
                 string schedulesJson = TerrariumBleController.Instance._schedulesString;
+                Debug.Log("Attempt " + (attempt + 1) + " raw JSON: " + schedulesJson);
                 
                 if (!string.IsNullOrEmpty(schedulesJson))
                 {
                     SchedulesResponse data = JsonUtility.FromJson<SchedulesResponse>(schedulesJson);
-                    if (data != null)
+                    if (data != null && (data.light != null || data.water != null))
                     {
                         Debug.Log("Successfully parsed schedules data");
                         DisplaySchedules(data);
                         
                         // Success - exit the retry loop
                         yield break;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Schedule data parsing returned null or empty object");
                     }
                 }
                 
@@ -86,10 +91,12 @@ public class ScheduleUIManager : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.Log("Retry attempt " + (attempt + 1) + ": " + ex.Message);
+                Debug.LogError("Retry attempt " + (attempt + 1) + ": " + ex.Message);
                 TerrariumBleController.Instance.ReadSchedules();
             }
         }
+        
+        Debug.LogError("Failed to retrieve schedule data after multiple attempts");
     }
     
     private IEnumerator UpdateSchedulesAfterDelay(float delay)

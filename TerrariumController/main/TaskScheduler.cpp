@@ -56,14 +56,54 @@ void TaskScheduler::parseAndSetSchedule(const String& cmd) {
         sch.duration2 = sch.duration1;
     }
 
+    bool wasLightAlwaysOn = (lightSchedule.type == ALWAYS_ON);
+    bool wasWaterAlwaysOn = (waterSchedule.type == ALWAYS_ON);
+
     // Assign to LIGHT or WATER schedule
     if (parts[0] == "LIGHT") {
         lightSchedule = sch;
         Serial.println("Light schedule updated.");
+        
+        // Check if we're transitioning from ALWAYS_ON to something else
+        // If so, immediately update the pin state
+        if (wasLightAlwaysOn && sch.type != ALWAYS_ON) {
+            digitalWrite(lightPin, LOW);
+            lightRunning = false;
+            Serial.println("Light pin turned OFF due to schedule change");
+        }
+        // If transitioning to ALWAYS_ON, turn on immediately
+        else if (!wasLightAlwaysOn && sch.type == ALWAYS_ON) {
+            digitalWrite(lightPin, HIGH);
+            Serial.println("Light pin turned ON due to ALWAYS_ON schedule");
+        }
+        // If transitioning to NONE, ensure it's off
+        else if (sch.type == NONE) {
+            digitalWrite(lightPin, LOW);
+            lightRunning = false;
+            Serial.println("Light pin turned OFF due to NONE schedule");
+        }
     }
     else if (parts[0] == "WATER") {
         waterSchedule = sch;
         Serial.println("Water schedule updated.");
+        
+        // Same logic for water pin
+        if (wasWaterAlwaysOn && sch.type != ALWAYS_ON) {
+            digitalWrite(waterPin, LOW);
+            waterRunning = false;
+            Serial.println("Water pin turned OFF due to schedule change");
+        }
+        // If transitioning to ALWAYS_ON, turn on immediately
+        else if (!wasWaterAlwaysOn && sch.type == ALWAYS_ON) {
+            digitalWrite(waterPin, HIGH);
+            Serial.println("Water pin turned ON due to ALWAYS_ON schedule");
+        }
+        // If transitioning to NONE, ensure it's off
+        else if (sch.type == NONE) {
+            digitalWrite(waterPin, LOW);
+            waterRunning = false;
+            Serial.println("Water pin turned OFF due to NONE schedule");
+        }
     }
     else {
         Serial.println("Unknown target. Use LIGHT or WATER.");

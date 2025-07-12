@@ -48,6 +48,11 @@ public class TerrariumBleController : MonoBehaviour
     public delegate void Connection();
     public static event Connection OnConnectionComplete;
 
+    public bool IsConnected
+{
+    get { return _mtuDone; }
+}
+
     void Start()
     {
         InitBLE();
@@ -267,10 +272,14 @@ public class TerrariumBleController : MonoBehaviour
         );
     }
 
-    public void WriteSchedule(string cmd)
+    /// <summary>
+    /// Writes a schedule command to the ESP32
+    /// </summary>
+    /// <param name="command">Command string in format: TARGET,TYPE,h1,m1,d1[,h2,m2]</param>
+    public void WriteSchedule(string command)
     {
         if (!_mtuDone) { statusText.text = "Not ready"; return; }
-        var data = Encoding.UTF8.GetBytes(cmd);
+        var data = Encoding.UTF8.GetBytes(command);
         BluetoothLEHardwareInterface.WriteCharacteristic(
             _deviceAddress, ServiceUUID, WriteScheduleUUID,
             data, data.Length, true,
@@ -336,8 +345,17 @@ public class TerrariumBleController : MonoBehaviour
     public SchedulesResponse GetSchedules()
     {
         if (string.IsNullOrEmpty(_schedulesString))
-            throw new InvalidOperationException("Schedules not yet read");
-        return JsonUtility.FromJson<SchedulesResponse>(_schedulesString);
+            return null;
+        
+        try
+        {
+            return JsonUtility.FromJson<SchedulesResponse>(_schedulesString);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("Error parsing schedules: " + ex.Message);
+            return null;
+        }
     }
 
     private IEnumerator RetryReadAfterDelay(string readType)
