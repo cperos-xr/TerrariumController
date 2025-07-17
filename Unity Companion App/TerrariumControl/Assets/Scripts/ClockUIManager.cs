@@ -29,10 +29,11 @@ public class ClockUIManager : MonoBehaviour
             readRTCButton.onClick.RemoveListener(ManualReadRTC);
     }
 
-    private void ManualReadRTC()
+    public void ManualReadRTC()
     {
         Debug.Log("Manual RTC read requested");
         TerrariumBleController.Instance.ReadRTC();
+        StopAllCoroutines();
         StartCoroutine(UpdateRTCAfterDelay(1.0f));
     }
     

@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class ScheduleUpdateManager : MonoBehaviour
 {
-    public enum ScheduleTarget { Light, Water }
+    public enum ScheduleTarget { Light, Water, Fogger }
     
     public enum ScheduleFrequency 
     { 
@@ -114,6 +114,20 @@ public class ScheduleUpdateManager : MonoBehaviour
         StartCoroutine(SendScheduleUpdateAndRefresh(command));
     }
     
+    // After updating the fogger schedule, force a refresh of the UI:
+    public void UpdateFoggerSchedule(ScheduleFrequency frequency, int hour, int minute)
+    {
+        // Create the command string
+        string targetStr = "FOGGER";
+        string frequencyStr = GetFrequencyString(frequency);
+        
+        // For fogger, we use a very short duration (1 second) since it has its own 4-hour timer
+        string command = $"{targetStr},{frequencyStr},{hour},{minute},1";
+        
+        // Send the command with special UI refresh follow-up
+        StartCoroutine(SendScheduleUpdateWithExtraRefresh(command));
+    }
+
     private IEnumerator SendScheduleUpdateAndRefresh(string command)
     {
         Debug.Log($"Sending schedule update: {command}");
@@ -152,6 +166,56 @@ public class ScheduleUpdateManager : MonoBehaviour
             catch (Exception ex)
             {
                 Debug.LogError($"Error refreshing schedules: {ex.Message}");
+            }
+        }
+    }
+
+    private IEnumerator SendScheduleUpdateWithExtraRefresh(string command)
+    {
+        Debug.Log($"Sending schedule update: {command}");
+
+        // Send the command to the ESP32
+        TerrariumBleController.Instance.WriteSchedule(command);
+
+        // Wait extra time for the ESP32 to process
+        yield return new WaitForSeconds(1.5f);
+
+        // Read back the updated schedules
+        TerrariumBleController.Instance.ReadSchedules();
+
+        // Wait extra time for the read to complete
+        yield return new WaitForSeconds(1.5f);
+
+        // Force another read to ensure fresh data
+        TerrariumBleController.Instance.ReadSchedules();
+
+        // Wait again
+        yield return new WaitForSeconds(1.0f);
+
+        // Refresh the UI
+        if (scheduleUIManager != null)
+        {
+            try
+            {
+                string schedulesJson = TerrariumBleController.Instance._schedulesString;
+                Debug.Log("Extra refresh - Raw schedules JSON: " + schedulesJson);
+
+                if (!string.IsNullOrEmpty(schedulesJson))
+                {
+                    SchedulesResponse data = JsonUtility.FromJson<SchedulesResponse>(schedulesJson);
+                    if (data != null)
+                    {
+                        scheduleUIManager.DisplaySchedules(data);
+                        Debug.Log("Schedule UI refreshed successfully with extra attempt");
+
+                        // Notify listeners that schedules were updated
+                        OnSchedulesUpdated?.Invoke();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error in extra refresh: {ex.Message}");
             }
         }
     }

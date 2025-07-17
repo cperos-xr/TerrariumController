@@ -8,9 +8,12 @@
 // Add this constant for the schedule file
 static const char* SCHEDULE_FILE = "/schedules.bin";
 
+// Add this external function declaration
+extern void pressFoggerButton();
+
 enum ScheduleType { NONE, ALWAYS_ON, DAILY, WEEKLY, TWICE_DAILY, TWICE_WEEKLY, MONTHLY, TWICE_MONTHLY };
 
-String scheduleTypeToString(ScheduleType type); // Add this function declaration
+String scheduleTypeToString(ScheduleType type); // Function declaration
 
 struct Schedule {
     ScheduleType type;
@@ -19,7 +22,7 @@ struct Schedule {
 
 class TaskScheduler {
 public:
-    TaskScheduler(int lightPin, int waterPin);
+    TaskScheduler(int lightPin, int waterPin, int foggerPin);
     void parseAndSetSchedule(const String& cmd);
     void updateTasks(const DateTime& now);
     String getSchedulesAsString();
@@ -31,10 +34,11 @@ public:
     bool clearSchedules();
 
 private:
-    int lightPin, waterPin;
-    Schedule lightSchedule, waterSchedule;
-    bool lightRunning, waterRunning;
-    unsigned long lightOffMillis, waterOffMillis;
+    int lightPin, waterPin, foggerPin;
+    Schedule lightSchedule, waterSchedule, foggerSchedule;
+    bool lightRunning, waterRunning, foggerRunning;
+    unsigned long lightOffMillis, waterOffMillis, foggerOffMillis;
+    
     void applySchedule(const Schedule&, int, bool&, unsigned long&, const DateTime&);
     void executeTask(int, int, bool&, unsigned long&);
     bool matchSchedule(const DateTime&, const Schedule&, bool&);

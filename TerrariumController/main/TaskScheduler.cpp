@@ -2,13 +2,16 @@
 #include "TaskScheduler.h"
 
 // Constructor: initialize pins and state
-TaskScheduler::TaskScheduler(int lp, int wp)
+TaskScheduler::TaskScheduler(int lp, int wp, int fp)
   : lightPin(lp)
   , waterPin(wp)
+  , foggerPin(fp)
   , lightRunning(false)
   , waterRunning(false)
+  , foggerRunning(false)
   , lightOffMillis(0)
   , waterOffMillis(0)
+  , foggerOffMillis(0)
 {
 }
 
@@ -58,25 +61,23 @@ void TaskScheduler::parseAndSetSchedule(const String& cmd) {
 
     bool wasLightAlwaysOn = (lightSchedule.type == ALWAYS_ON);
     bool wasWaterAlwaysOn = (waterSchedule.type == ALWAYS_ON);
+    bool wasFoggerAlwaysOn = (foggerSchedule.type == ALWAYS_ON);
 
-    // Assign to LIGHT or WATER schedule
+    // Assign to LIGHT, WATER, or FOGGER schedule
     if (parts[0] == "LIGHT") {
         lightSchedule = sch;
         Serial.println("Light schedule updated.");
         
-        // Check if we're transitioning from ALWAYS_ON to something else
-        // If so, immediately update the pin state
+        // Handle immediate state change if needed
         if (wasLightAlwaysOn && sch.type != ALWAYS_ON) {
             digitalWrite(lightPin, LOW);
             lightRunning = false;
             Serial.println("Light pin turned OFF due to schedule change");
         }
-        // If transitioning to ALWAYS_ON, turn on immediately
         else if (!wasLightAlwaysOn && sch.type == ALWAYS_ON) {
             digitalWrite(lightPin, HIGH);
             Serial.println("Light pin turned ON due to ALWAYS_ON schedule");
         }
-        // If transitioning to NONE, ensure it's off
         else if (sch.type == NONE) {
             digitalWrite(lightPin, LOW);
             lightRunning = false;
@@ -87,26 +88,47 @@ void TaskScheduler::parseAndSetSchedule(const String& cmd) {
         waterSchedule = sch;
         Serial.println("Water schedule updated.");
         
-        // Same logic for water pin
+        // Handle immediate state change if needed
         if (wasWaterAlwaysOn && sch.type != ALWAYS_ON) {
             digitalWrite(waterPin, LOW);
             waterRunning = false;
             Serial.println("Water pin turned OFF due to schedule change");
         }
-        // If transitioning to ALWAYS_ON, turn on immediately
         else if (!wasWaterAlwaysOn && sch.type == ALWAYS_ON) {
             digitalWrite(waterPin, HIGH);
             Serial.println("Water pin turned ON due to ALWAYS_ON schedule");
         }
-        // If transitioning to NONE, ensure it's off
         else if (sch.type == NONE) {
             digitalWrite(waterPin, LOW);
             waterRunning = false;
             Serial.println("Water pin turned OFF due to NONE schedule");
         }
     }
+    else if (parts[0] == "FOGGER") {
+        foggerSchedule = sch;
+        Serial.println("Fogger schedule updated.");
+        
+        // Handle immediate state change if needed (via simulated button press)
+        if (wasFoggerAlwaysOn && sch.type != ALWAYS_ON) {
+            // If we're turning off an ALWAYS_ON fogger, simulate a button press
+            pressFoggerButton();
+            foggerRunning = false;
+            Serial.println("Fogger button pressed to turn OFF due to schedule change");
+        }
+        else if (!wasFoggerAlwaysOn && sch.type == ALWAYS_ON) {
+            // If we're turning the fogger to ALWAYS_ON, simulate a button press
+            pressFoggerButton();
+            Serial.println("Fogger button pressed to turn ON due to ALWAYS_ON schedule");
+        }
+        else if (sch.type == NONE && foggerRunning) {
+            // If fogger is running and we're setting to NONE, simulate a button press
+            pressFoggerButton();
+            foggerRunning = false;
+            Serial.println("Fogger button pressed to turn OFF due to NONE schedule");
+        }
+    }
     else {
-        Serial.println("Unknown target. Use LIGHT or WATER.");
+        Serial.println("Unknown target. Use LIGHT, WATER, or FOGGER.");
         return;
     }
     
@@ -118,6 +140,7 @@ void TaskScheduler::parseAndSetSchedule(const String& cmd) {
 void TaskScheduler::updateTasks(const DateTime& now) {
   applySchedule(lightSchedule, lightPin, lightRunning, lightOffMillis, now);
   applySchedule(waterSchedule, waterPin, waterRunning, waterOffMillis, now);
+  applySchedule(foggerSchedule, foggerPin, foggerRunning, foggerOffMillis, now);
 }
 
 // Core logic to turn pins on/off based on schedule and elapsed time
@@ -130,65 +153,59 @@ void TaskScheduler::applySchedule(
 ) {
   if (sch.type == NONE) return;
 
-  // ALWAYS_ON: keep the pin HIGH
+  // ALWAYS_ON: special handling for fogger vs regular pins
   if (sch.type == ALWAYS_ON) {
-    digitalWrite(pin, HIGH);
+    if (pin == foggerPin) {
+      // For fogger with ALWAYS_ON, we should press the button every 4 hours
+      // plus a 5-minute cooldown between cycles
+      if (!running) {
+        // If not running at all, start it
+        pressFoggerButton(); // Simulate button press to turn on
+        running = true;
+        // Set next cycle time: 4 hours (fogger's internal timer) + 5 min cooldown
+        offTime = millis() + 14400000 + 300000; // 4h + 5min in milliseconds
+        Serial.println("Fogger button pressed for ALWAYS_ON schedule");
+      } 
+      else if (millis() > offTime) {
+        // Time for next cycle after cooldown
+        pressFoggerButton(); // Simulate button press to turn on again
+        // Reset the timer for the next cycle
+        offTime = millis() + 14400000 + 300000; // 4h + 5min
+        Serial.println("Fogger button pressed for ALWAYS_ON schedule (after cooldown)");
+      }
+    } else {
+      // Standard behavior for light and water pins
+      digitalWrite(pin, HIGH);
+    }
     return;
   }
 
-  // If currently running and time elapsed, turn off
-  if (running && millis() >= offTime) {
+  // Handle regular pins that need to be turned off after duration
+  if (pin != foggerPin && running && millis() >= offTime) {
     digitalWrite(pin, LOW);
     running = false;
   }
 
+  // For fogger, we don't check offTime for turning off since it self-manages
+  
   bool secondInstance = false;
   if (!running && matchSchedule(now, sch, secondInstance)) {
     int durationMs = secondInstance ? sch.duration2 : sch.duration1;
-    executeTask(pin, durationMs, running, offTime);
+    
+    if (pin == foggerPin) {
+      // For fogger, just press the button to activate and set flag
+      pressFoggerButton();
+      running = true;
+      // For scheduled (non-ALWAYS_ON) operation, we still track when the 4-hour cycle should end
+      offTime = millis() + 14400000; // 4 hours in milliseconds
+      Serial.println("Fogger button pressed for scheduled activation");
+    } else {
+      // Standard pins get set HIGH with our duration
+      digitalWrite(pin, HIGH);
+      running = true;
+      offTime = millis() + durationMs;
+    }
   }
-}
-
-String TaskScheduler::getSchedulesAsString() {
-    String result = "LIGHT:";
-    
-    // Format light schedule
-    result += scheduleToString(lightSchedule, "LIGHT");
-    result += ";WATER:";
-    
-    // Format water schedule  
-    result += scheduleToString(waterSchedule, "WATER");
-    
-    return result;
-}
-
-// Helper method to convert schedule to string
-String TaskScheduler::scheduleToString(const Schedule& sch, const String& type) {
-    if (sch.type == NONE) {
-        return "NONE";
-    }
-    
-    String typeStr;
-    switch (sch.type) {
-        case ALWAYS_ON: typeStr = "ALWAYS_ON"; break;
-        case DAILY: typeStr = "DAILY"; break;
-        case WEEKLY: typeStr = "WEEKLY"; break;
-        case TWICE_DAILY: typeStr = "TWICE_DAILY"; break;
-        case TWICE_WEEKLY: typeStr = "TWICE_WEEKLY"; break;
-        case MONTHLY: typeStr = "MONTHLY"; break;
-        case TWICE_MONTHLY: typeStr = "TWICE_MONTHLY"; break;
-        default: typeStr = "UNKNOWN"; break;
-    }
-    
-    String result = typeStr + "," + String(sch.hour1) + ":" + String(sch.minute1) + 
-                   "," + String(sch.duration1/1000) + "s";
-    
-    // Add second time for TWICE_* schedules
-    if (sch.type == TWICE_DAILY || sch.type == TWICE_WEEKLY || sch.type == TWICE_MONTHLY) {
-        result += "," + String(sch.hour2) + ":" + String(sch.minute2);
-    }
-    
-    return result;
 }
 
 // Engage the pin for the specified duration
@@ -198,7 +215,15 @@ void TaskScheduler::executeTask(
   bool& running,
   unsigned long& offTime
 ) {
-  digitalWrite(pin, HIGH);
+  if (pin == foggerPin) {
+    // For fogger, simulate button press to turn on
+    pressFoggerButton();
+    Serial.println("Fogger button pressed for scheduled activation");
+  } else {
+    // Standard pins get set HIGH
+    digitalWrite(pin, HIGH);
+  }
+  
   running = true;
   offTime = millis() + durationMs;
 }
@@ -296,6 +321,9 @@ bool TaskScheduler::saveSchedules() {
     
     // Write water schedule
     f.write((uint8_t*)&waterSchedule, sizeof(Schedule));
+    
+    // Write fogger schedule
+    f.write((uint8_t*)&foggerSchedule, sizeof(Schedule));
 
     f.close();
     Serial.println("✅ Schedules saved to LittleFS");
@@ -319,6 +347,9 @@ bool TaskScheduler::loadSchedules() {
     
     // Read water schedule
     f.read((uint8_t*)&waterSchedule, sizeof(Schedule));
+    
+    // Read fogger schedule
+    f.read((uint8_t*)&foggerSchedule, sizeof(Schedule));
 
     f.close();
     Serial.println("✅ Schedules loaded from LittleFS");
@@ -329,6 +360,8 @@ bool TaskScheduler::loadSchedules() {
     Serial.println(scheduleToString(lightSchedule, "LIGHT"));
     Serial.print("Water: ");
     Serial.println(scheduleToString(waterSchedule, "WATER"));
+    Serial.print("Fogger: ");
+    Serial.println(scheduleToString(foggerSchedule, "FOGGER"));
     
     return true;
 }
@@ -349,19 +382,44 @@ bool TaskScheduler::clearSchedules() {
     Schedule emptySchedule = {NONE, 0, 0, 0, 0, 0, 0};
     lightSchedule = emptySchedule;
     waterSchedule = emptySchedule;
+    foggerSchedule = emptySchedule;
     
     // Turn off any running outputs
     digitalWrite(lightPin, LOW);
     digitalWrite(waterPin, LOW);
+    
+    // For fogger, press button if it's running to turn it off
+    if (foggerRunning) {
+        pressFoggerButton();
+    }
+    
     lightRunning = false;
     waterRunning = false;
+    foggerRunning = false;
     
     Serial.println("✅ All schedules reset to default values");
     return true;
 }
 
-// Add at the end of the file
+// Update getSchedulesAsString to include fogger
+String TaskScheduler::getSchedulesAsString() {
+    String result = "LIGHT:";
+    
+    // Format light schedule
+    result += scheduleToString(lightSchedule, "LIGHT");
+    result += ";WATER:";
+    
+    // Format water schedule  
+    result += scheduleToString(waterSchedule, "WATER");
+    
+    // Add fogger schedule
+    result += ";FOGGER:";
+    result += scheduleToString(foggerSchedule, "FOGGER");
+    
+    return result;
+}
 
+// Update JSON output to include fogger
 String TaskScheduler::getSchedulesAsJSON() {
     String json = "{";
     
@@ -397,10 +455,52 @@ String TaskScheduler::getSchedulesAsJSON() {
     } else {
         json += "\"hour2\":0,\"minute2\":0,\"duration2\":0";
     }
+    json += "},";
+    
+    // Fogger schedule
+    json += "\"fogger\":{";
+    json += "\"type\":\"" + scheduleTypeToString(foggerSchedule.type) + "\",";
+    json += "\"hour1\":" + String(foggerSchedule.hour1) + ",";
+    json += "\"minute1\":" + String(foggerSchedule.minute1) + ",";
+    json += "\"duration1\":" + String(foggerSchedule.duration1/1000) + ","; // Convert to seconds
+    
+    // Include second time for TWICE_* schedules
+    if (foggerSchedule.type == TWICE_DAILY || foggerSchedule.type == TWICE_WEEKLY || foggerSchedule.type == TWICE_MONTHLY) {
+        json += "\"hour2\":" + String(foggerSchedule.hour2) + ",";
+        json += "\"minute2\":" + String(foggerSchedule.minute2) + ",";
+        json += "\"duration2\":" + String(foggerSchedule.duration2/1000); // Convert to seconds
+    } else {
+        json += "\"hour2\":0,\"minute2\":0,\"duration2\":0";
+    }
     json += "}";
     
     json += "}";
     return json;
+}
+
+// Add this implementation for the scheduleToString method
+String TaskScheduler::scheduleToString(const Schedule& sch, const String& type) {
+    switch (sch.type) {
+        case ALWAYS_ON:
+            return type + " ALWAYS_ON";
+        case DAILY:
+            return type + " DAILY," + String(sch.hour1) + "," + String(sch.minute1) + "," + String(sch.duration1/1000);
+        case WEEKLY:
+            return type + " WEEKLY," + String(sch.hour1) + "," + String(sch.minute1) + "," + String(sch.duration1/1000);
+        case TWICE_DAILY:
+            return type + " TWICE_DAILY," + String(sch.hour1) + "," + String(sch.minute1) + "," + 
+                   String(sch.duration1/1000) + "," + String(sch.hour2) + "," + String(sch.minute2);
+        case TWICE_WEEKLY:
+            return type + " TWICE_WEEKLY," + String(sch.hour1) + "," + String(sch.minute1) + "," + 
+                   String(sch.duration1/1000) + "," + String(sch.hour2) + "," + String(sch.minute2);
+        case MONTHLY:
+            return type + " MONTHLY," + String(sch.hour1) + "," + String(sch.minute1) + "," + String(sch.duration1/1000);
+        case TWICE_MONTHLY:
+            return type + " TWICE_MONTHLY," + String(sch.hour1) + "," + String(sch.minute1) + "," + 
+                   String(sch.duration1/1000) + "," + String(sch.hour2) + "," + String(sch.minute2);
+        default:
+            return type + " NONE";
+    }
 }
 
 // Helper to convert schedule type to string

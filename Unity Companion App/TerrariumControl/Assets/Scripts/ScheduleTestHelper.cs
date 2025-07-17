@@ -15,6 +15,9 @@ public class ScheduleTestHelper : MonoBehaviour
     public Button testWaterAlwaysOnButton;
     public Button testWaterOffButton;
     public Button testFoggerButton;
+    public Button testFoggerDailyButton;
+    public Button testFoggerAlwaysOnButton;
+    public Button testFoggerOffButton;
     
     private void Start()
     {
@@ -39,6 +42,15 @@ public class ScheduleTestHelper : MonoBehaviour
             
         if (testFoggerButton != null)
             testFoggerButton.onClick.AddListener(() => TestFoggerButtonPress());
+            
+        if (testFoggerDailyButton != null)
+            testFoggerDailyButton.onClick.AddListener(() => TestFoggerDaily());
+        
+        if (testFoggerAlwaysOnButton != null)
+            testFoggerAlwaysOnButton.onClick.AddListener(() => TestFoggerAlwaysOn());
+        
+        if (testFoggerOffButton != null)
+            testFoggerOffButton.onClick.AddListener(() => TestFoggerOff());
     }
     
     // Light schedule tests
@@ -77,6 +89,25 @@ public class ScheduleTestHelper : MonoBehaviour
     {
         Debug.Log("Testing WATER OFF (NONE) schedule");
         SendTestSchedule("WATER,NONE,0,0,0");
+    }
+    
+    // Fogger schedule tests
+    public void TestFoggerDaily()
+    {
+        Debug.Log("Testing FOGGER DAILY schedule");
+        SendTestSchedule("FOGGER,DAILY,12,0,120");
+    }
+
+    public void TestFoggerAlwaysOn()
+    {
+        Debug.Log("Testing FOGGER ALWAYS_ON schedule");
+        SendTestSchedule("FOGGER,ALWAYS_ON,0,0,0");
+    }
+
+    public void TestFoggerOff()
+    {
+        Debug.Log("Testing FOGGER OFF (NONE) schedule");
+        SendTestSchedule("FOGGER,NONE,0,0,0");
     }
     
     // Test any arbitrary schedule command

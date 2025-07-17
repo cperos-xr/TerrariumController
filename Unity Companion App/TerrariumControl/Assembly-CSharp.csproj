@@ -76,6 +76,7 @@
     <Compile Include="Assets\Scripts\SensorUIManager.cs" />
     <Compile Include="Assets\Shatalmic\Example\MultipleLevels\Level1Script.cs" />
     <Compile Include="Assets\Shatalmic\Example\iBeaconExample\iBeaconExampleScript.cs" />
+    <Compile Include="Assets\Scripts\ScheduleWizard.cs" />
     <Compile Include="Assets\Scripts\TerrariumBleController.cs" />
     <Compile Include="Assets\Shatalmic\Example\ScannerTest\ScannedItemScript.cs" />
     <Compile Include="Assets\Scripts\DeviceTime.cs" />

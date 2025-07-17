@@ -83,4 +83,5 @@ public class SchedulesResponse
 {
     public ScheduleData light;
     public ScheduleData water;
+    public ScheduleData fogger; // Add fogger schedule
 }

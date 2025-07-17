@@ -10,6 +10,8 @@ public class ScheduleUIManager : MonoBehaviour
     public TextMeshProUGUI waterFrequency;
     public TextMeshProUGUI lightDuration;
     public TextMeshProUGUI lightFrequency;
+    public TextMeshProUGUI foggerDuration;
+    public TextMeshProUGUI foggerFrequency;
     
     // Add a button reference for manual update
     public UnityEngine.UI.Button readSchedulesButton;
@@ -145,6 +147,37 @@ public class ScheduleUIManager : MonoBehaviour
 
     public void DisplaySchedules(SchedulesResponse schedules)
     {
+        // First log the entire response for debugging
+        Debug.Log($"Received schedules: {JsonUtility.ToJson(schedules)}");
+        
+        // Check if fogger data exists
+        if (schedules.fogger != null) {
+            Debug.Log($"Fogger schedule: Type={schedules.fogger.type}, Hour1={schedules.fogger.hour1}, Minute1={schedules.fogger.minute1}");
+            
+            foggerFrequency.text = schedules.fogger.GetTypeDescription();
+            
+            if (schedules.fogger.type == "ALWAYS_ON") {
+                foggerDuration.text = "Always On";
+            }
+            else if (schedules.fogger.type == "NONE") {
+                foggerDuration.text = "Not scheduled";
+            }
+            else {
+                string durationText = schedules.fogger.GetFormattedTime1() + " (runs for 4 hours)";
+                
+                if (schedules.fogger.type.StartsWith("TWICE_")) {
+                    durationText += "\n" + schedules.fogger.GetFormattedTime2() + " (runs for 4 hours)";
+                }
+                
+                foggerDuration.text = durationText;
+            }
+        }
+        else {
+            Debug.LogError("Fogger schedule data is null!");
+            foggerFrequency.text = "Error";
+            foggerDuration.text = "Error loading fogger data";
+        }
+        
         // Display water schedule info
         if (schedules.water != null)
         {

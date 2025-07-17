@@ -31,7 +31,7 @@ const int PIN_FOGGER = 20; // Fogger button simulation pin
 #define SCL_PIN     7
 
 RTCManager rtc;
-TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
+TaskScheduler scheduler(PIN_LIGHT, PIN_WATER, PIN_FOGGER);
 BluetoothManager ble;
 DisplayManager dsp;
 RecordManager rcd;
