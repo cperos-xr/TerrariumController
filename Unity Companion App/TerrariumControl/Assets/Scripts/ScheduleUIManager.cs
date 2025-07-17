@@ -163,10 +163,10 @@ public class ScheduleUIManager : MonoBehaviour
                 foggerDuration.text = "Not scheduled";
             }
             else {
-                string durationText = schedules.fogger.GetFormattedTime1() + " (runs for 4 hours)";
+                string durationText = schedules.fogger.GetFormattedTime1();
                 
                 if (schedules.fogger.type.StartsWith("TWICE_")) {
-                    durationText += "\n" + schedules.fogger.GetFormattedTime2() + " (runs for 4 hours)";
+                    durationText += "\n" + schedules.fogger.GetFormattedTime2();
                 }
                 
                 foggerDuration.text = durationText;
