@@ -24,10 +24,10 @@
 
 // Pin definitions
 const int PIN_LIGHT = 4;
-const int PIN_WATER = 3;
+const int PIN_WATER = 5;
 
-#define SDA_PIN     5
-#define SCL_PIN     6
+#define SDA_PIN     6
+#define SCL_PIN     7
 
 RTCManager rtc;
 TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
