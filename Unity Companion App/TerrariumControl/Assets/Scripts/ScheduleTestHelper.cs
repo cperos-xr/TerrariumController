@@ -14,6 +14,7 @@ public class ScheduleTestHelper : MonoBehaviour
     public Button testWaterDailyButton;
     public Button testWaterAlwaysOnButton;
     public Button testWaterOffButton;
+    public Button testFoggerButton;
     
     private void Start()
     {
@@ -35,6 +36,9 @@ public class ScheduleTestHelper : MonoBehaviour
             
         if (testWaterOffButton != null)
             testWaterOffButton.onClick.AddListener(() => TestWaterOff());
+            
+        if (testFoggerButton != null)
+            testFoggerButton.onClick.AddListener(() => TestFoggerButtonPress());
     }
     
     // Light schedule tests
@@ -142,5 +146,30 @@ public class ScheduleTestHelper : MonoBehaviour
                 Debug.LogError($"Error refreshing schedules: {ex.Message}");
             }
         }
+    }
+    
+    // Fogger button test
+    public void TestFoggerButtonPress()
+    {
+        Debug.Log("Testing FOGGER button press");
+        StartCoroutine(SendFoggerButtonPress());
+    }
+
+    private IEnumerator SendFoggerButtonPress()
+    {
+        // Check if connected
+        if (!TerrariumBleController.Instance.IsConnected)
+        {
+            Debug.LogError("Cannot press fogger button: BLE not connected");
+            yield break;
+        }
+        
+        // Send the command
+        Debug.Log("Sending fogger button press command");
+        TerrariumBleController.Instance.PressFoggerButton();
+        
+        yield return new WaitForSeconds(0.5f);
+        
+        Debug.Log("Fogger button press command sent");
     }
 }

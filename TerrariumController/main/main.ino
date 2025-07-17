@@ -25,6 +25,7 @@
 // Pin definitions
 const int PIN_LIGHT = 4;
 const int PIN_WATER = 5;
+const int PIN_FOGGER = 20; // Fogger button simulation pin
 
 #define SDA_PIN     6
 #define SCL_PIN     7
@@ -34,6 +35,14 @@ TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
 BluetoothManager ble;
 DisplayManager dsp;
 RecordManager rcd;
+
+// Function to simulate fogger button press
+void pressFoggerButton() {
+    digitalWrite(PIN_FOGGER, HIGH);
+    delay(200); // Short pulse - simulating button press
+    digitalWrite(PIN_FOGGER, LOW);
+    Serial.println("Fogger button pressed");
+}
 
 void setup() 
 {
@@ -92,11 +101,13 @@ void setup()
   }
   Serial.println("Scan complete.");
 
-  
   pinMode(PIN_LIGHT, OUTPUT);
   pinMode(PIN_WATER, OUTPUT);
+  pinMode(PIN_FOGGER, OUTPUT); // Initialize fogger button pin
+  
   digitalWrite(PIN_LIGHT, LOW);
   digitalWrite(PIN_WATER, LOW);
+  digitalWrite(PIN_FOGGER, LOW); // Start with fogger button not pressed
   
   ble.initBLE(&scheduler, &rtc);
   ble.startAdvertising();

@@ -11,6 +11,7 @@
 #define CHARACTERISTIC_UUID_CLEAR_SCHEDULES "12345678-1234-5678-1234-56789abcdef8" // UUID for clearing schedules
 #define CHARACTERISTIC_UUID_CLEAR_RECORDS "12345678-1234-5678-1234-56789abcdef9" // UUID for clearing records
 #define CHARACTERISTIC_UUID_WRITE_RTC   "12345678-1234-5678-1234-56789abcdefa" // New UUID for writing to RTC
+#define CHARACTERISTIC_UUID_FOGGER_BUTTON "12345678-1234-5678-1234-56789abcdefb" // New UUID for fogger button
 
 // Server callback class to handle connections
 class ServerCallbacks : public BLEServerCallbacks {
@@ -40,7 +41,7 @@ void BluetoothManager::initBLE(TaskScheduler* sched, RTCManager* rtcMgr) {
     pServer->setCallbacks(new ServerCallbacks());
     
     // Create a larger service to accommodate all characteristics
-    pService = pServer->createService(BLEUUID(SERVICE_UUID), 30);  // Increase the handles count to 30
+    pService = pServer->createService(BLEUUID(SERVICE_UUID), 35);  // Increase the handles count to 35
 
     pRxWater = pService->createCharacteristic(
         CHARACTERISTIC_UUID_WRITE_SCHEDULES,
@@ -104,6 +105,15 @@ void BluetoothManager::initBLE(TaskScheduler* sched, RTCManager* rtcMgr) {
     pClearRecords->addDescriptor(new BLE2902());
     pClearRecords->setCallbacks(new ClearRecordsCallback());
     pClearRecords->setValue("Send 'CLEAR' to reset records");
+
+    // Add the new fogger button characteristic
+    pFoggerButton = pService->createCharacteristic(
+        CHARACTERISTIC_UUID_FOGGER_BUTTON,
+        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ
+    );
+    pFoggerButton->addDescriptor(new BLE2902());
+    pFoggerButton->setCallbacks(new FoggerButtonCallback());
+    pFoggerButton->setValue("Send 'PRESS' to activate fogger button");
 
     pService->start();
     
@@ -234,5 +244,19 @@ void ClearRecordsCallback::onWrite(BLECharacteristic* pCharacteristic) {
         Serial.println("✅ Records cleared via BLE command");
     } else {
         pCharacteristic->setValue("Invalid command. Send 'CLEAR' to reset records");
+    }
+}
+
+// Add the fogger button callback implementation
+void FoggerButtonCallback::onWrite(BLECharacteristic* pCharacteristic) {
+    String value = pCharacteristic->getValue();
+    if (value == "PRESS") {
+        // Call the fogger button press function defined in main.ino
+        pressFoggerButton();
+        pCharacteristic->setValue("Fogger button pressed");
+        Serial.println("Fogger button activated via BLE");
+    } else {
+        pCharacteristic->setValue("Invalid command. Send 'PRESS' to activate fogger");
+        Serial.println("❌ Invalid fogger command received via BLE");
     }
 }

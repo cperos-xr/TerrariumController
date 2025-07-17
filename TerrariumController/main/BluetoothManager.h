@@ -11,6 +11,9 @@
 #include "SensorManager.h"
 #include "RecordManager.h"
 
+// Function declaration for pressFoggerButton (defined in main.ino)
+void pressFoggerButton();
+
 class BluetoothManager {
 public:
     void initBLE(TaskScheduler* sched, RTCManager* rtcMgr);
@@ -30,6 +33,13 @@ private:
     BLECharacteristic* pRecordRead;
     BLECharacteristic* pClearSchedules;
     BLECharacteristic* pClearRecords;
+    BLECharacteristic* pFoggerButton; // New characteristic for fogger button
+};
+
+// Add the fogger button callback class
+class FoggerButtonCallback : public BLECharacteristicCallbacks {
+public:
+    void onWrite(BLECharacteristic* pCharacteristic) override;
 };
 
 // Callback for writing to BLE characteristics

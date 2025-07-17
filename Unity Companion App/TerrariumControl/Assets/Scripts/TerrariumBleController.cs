@@ -31,6 +31,7 @@ public class TerrariumBleController : MonoBehaviour
     public string ReadSchedulesUUID = "12345678-1234-5678-1234-56789abcdef5";
     public string ClearSchedulesUUID = "12345678-1234-5678-1234-56789abcdef8";
     public string ClearRecordsUUID = "12345678-1234-5678-1234-56789abcdef9";
+    public string FoggerButtonUUID = "12345678-1234-5678-1234-56789abcdefb";
 
     [Header("UI Elements (assign in Inspector)")]
     public TextMeshProUGUI statusText;
@@ -393,6 +394,35 @@ public class TerrariumBleController : MonoBehaviour
                 );
             }
             catch { /* Ignore any errors on retry */ }
+        }
+    }
+
+    /// <summary>
+    /// Simulates pressing the fogger button
+    /// </summary>
+    public void PressFoggerButton()
+    {
+        if (!IsConnected)
+        {
+            Debug.LogError("Cannot press fogger button: BLE not connected");
+            return;
+        }
+        
+        try
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes("PRESS");
+            BluetoothLEHardwareInterface.WriteCharacteristic(
+                _deviceAddress, ServiceUUID, FoggerButtonUUID,
+                bytes, bytes.Length,
+                false, (characteristic) => {
+                    Debug.Log("Fogger button press command sent successfully");
+                }
+            );
+            Debug.Log("Fogger button press command sent");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error pressing fogger button: {ex.Message}");
         }
     }
 }
