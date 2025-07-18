@@ -179,4 +179,16 @@ void loop()
 
     Serial.print("Current Temp C: ");
     Serial.println(tempC);
+  
+    // Make sure this is called to check schedules
+    now = rtc.getCurrentTime();
+    scheduler.updateTasks(now);
+  
+    // Add debug to verify schedules are being checked
+    static unsigned long lastDebugMillis = 0;
+    if (millis() - lastDebugMillis > 60000) { // Every minute
+      lastDebugMillis = millis();
+      now = rtc.getCurrentTime(); // Get fresh time
+      Serial.println("Checking schedules at " + String(now.hour()) + ":" + String(now.minute()));
+    }
 }

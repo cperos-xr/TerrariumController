@@ -119,13 +119,16 @@ public class ScheduleUpdateManager : MonoBehaviour
     {
         // Create the command string
         string targetStr = "FOGGER";
-        string frequencyStr = GetFrequencyString(frequency);
+        string frequencyStr = GetFrequencyString(frequency); // Corrected method name
         
         // For fogger, we use a very short duration (1 second) since it has its own 4-hour timer
         string command = $"{targetStr},{frequencyStr},{hour},{minute},1";
         
-        // Send the command with special UI refresh follow-up
-        StartCoroutine(SendScheduleUpdateWithExtraRefresh(command));
+        // Send the command with standard refresh (instead of special refresh)
+        StartCoroutine(SendScheduleUpdateAndRefresh(command));
+        
+        // Add debug to verify
+        Debug.Log($"Sent fogger update: {command}");
     }
 
     private IEnumerator SendScheduleUpdateAndRefresh(string command)
