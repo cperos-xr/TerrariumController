@@ -223,6 +223,7 @@ void RTCWriteCallback::onWrite(BLECharacteristic* pCharacteristic) {
     }
 }
 
+// ClearRecordsCallback implementation
 ClearRecordsCallback::ClearRecordsCallback() {}
 
 void ClearRecordsCallback::onWrite(BLECharacteristic* pCharacteristic) {
