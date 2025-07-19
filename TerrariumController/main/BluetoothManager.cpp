@@ -10,7 +10,6 @@
 #define CHARACTERISTIC_UUID_READ_RECORDS "12345678-1234-5678-1234-56789abcdef7" // New UUID for Record Read
 #define CHARACTERISTIC_UUID_CLEAR_SCHEDULES "12345678-1234-5678-1234-56789abcdef8" // UUID for clearing schedules
 #define CHARACTERISTIC_UUID_CLEAR_RECORDS "12345678-1234-5678-1234-56789abcdef9" // UUID for clearing records
-#define CHARACTERISTIC_UUID_WRITE_RTC   "12345678-1234-5678-1234-56789abcdefa" // New UUID for writing to RTC
 
 // Server callback class to handle connections
 class ServerCallbacks : public BLEServerCallbacks {
@@ -56,14 +55,6 @@ void BluetoothManager::initBLE(TaskScheduler* sched, RTCManager* rtcMgr) {
     );
     pRtcTime->addDescriptor(new BLE2902());
     pRtcTime->setCallbacks(new RTCReadCallback(rtc));
-
-    pRtcWrite = pService->createCharacteristic(
-        CHARACTERISTIC_UUID_WRITE_RTC,
-        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ
-    );
-    pRtcWrite->addDescriptor(new BLE2902());
-    pRtcWrite->setCallbacks(new RTCWriteCallback(rtc));
-    pRtcWrite->setValue("Format: YYYY-MM-DD HH:MM:SS");
 
     // Schedule characteristic
     pScheduleRead = pService->createCharacteristic(
@@ -182,44 +173,6 @@ void ClearSchedulesCallback::onWrite(BLECharacteristic* pCharacteristic) {
         }
     } else {
         pCharacteristic->setValue("Invalid command. Send 'CLEAR' to reset schedules");
-    }
-}
-
-RTCWriteCallback::RTCWriteCallback(RTCManager* rtcMgr) : rtc(rtcMgr) {}
-
-void RTCWriteCallback::onWrite(BLECharacteristic* pCharacteristic) {
-    String value = pCharacteristic->getValue();
-    
-    // Expected format: YYYY-MM-DD HH:MM:SS
-    if (value.length() == 19) {
-        int year = value.substring(0, 4).toInt();
-        int month = value.substring(5, 7).toInt();
-        int day = value.substring(8, 10).toInt();
-        int hour = value.substring(11, 13).toInt();
-        int minute = value.substring(14, 16).toInt();
-        int second = value.substring(17, 19).toInt();
-        
-        // Validate the input
-        if (year >= 2000 && year <= 2099 && 
-            month >= 1 && month <= 12 && 
-            day >= 1 && day <= 31 && 
-            hour >= 0 && hour <= 23 && 
-            minute >= 0 && minute <= 59 && 
-            second >= 0 && second <= 59) {
-            
-            // Set the RTC
-            rtc->setDateTime(year, month, day, hour, minute, second);
-            
-            // Confirm success
-            pCharacteristic->setValue("RTC time set successfully");
-            Serial.println("✅ RTC time updated via BLE command");
-        } else {
-            pCharacteristic->setValue("Invalid date/time values");
-            Serial.println("❌ Invalid date/time values received via BLE");
-        }
-    } else {
-        pCharacteristic->setValue("Invalid format. Use YYYY-MM-DD HH:MM:SS");
-        Serial.println("❌ Invalid time format received via BLE");
     }
 }
 
