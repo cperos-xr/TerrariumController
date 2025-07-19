@@ -8,8 +8,6 @@ RecordManager::RecordManager() : lastSaveTime(0) {
 }
 
 void RecordManager::initRecords() {
-
-    loadRecordsFromEEPROM();
     // Initialize HIGH records with very LOW values (so any real reading will be higher)
     highTempOfTheWeek = createInvalidHighRecord(TEMPERATURE);
     highHumidOfTheWeek = createInvalidHighRecord(HUMIDITY);
@@ -34,8 +32,6 @@ void RecordManager::initRecords() {
         rollingHumidHighs[i] = createInvalidHighRecord(HUMIDITY);
         rollingHumidLows[i] = createInvalidLowRecord(HUMIDITY);
     }
-
-    
     
     Serial.println("RecordManager initialized with rolling records");
 }
@@ -459,81 +455,6 @@ float RecordManager::getLowHumidWeekly() const {
     return (lowHumidOfTheWeek.value != std::numeric_limits<float>::max()) ? lowHumidOfTheWeek.value : NAN;
 }
 
-void RecordManager::saveRecordsToEEPROM() {
-    EEPROM.begin(EEPROM_SIZE);
-    int addr = EEPROM_ADDR_RECORDS;
-
-    // Save daily and weekly records first
-    EEPROM.put(addr, highTempOfTheDay); addr += sizeof(Record);
-    EEPROM.put(addr, lowTempOfTheDay); addr += sizeof(Record);
-    EEPROM.put(addr, highHumidOfTheDay); addr += sizeof(Record);
-    EEPROM.put(addr, lowHumidOfTheDay); addr += sizeof(Record);
-    
-    EEPROM.put(addr, highTempOfTheWeek); addr += sizeof(Record);
-    EEPROM.put(addr, lowTempOfTheWeek); addr += sizeof(Record);
-    EEPROM.put(addr, highHumidOfTheWeek); addr += sizeof(Record);
-    EEPROM.put(addr, lowHumidOfTheWeek); addr += sizeof(Record);
-
-    // Then save rolling buffers
-    auto dumpBuffer = [&](Record buffer[]) {
-        for (int i = 0; i < MAX_ROLLING_RECORDS; i++) {
-            EEPROM.put(addr, buffer[i].dateTime.unixtime()); addr += sizeof(uint32_t);
-            EEPROM.put(addr, buffer[i].value); addr += sizeof(float);
-            EEPROM.put(addr, buffer[i].sensorType); addr += sizeof(uint8_t);
-        }
-    };
-
-    dumpBuffer(rollingTempHighs);
-    dumpBuffer(rollingTempLows);
-    dumpBuffer(rollingHumidHighs);
-    dumpBuffer(rollingHumidLows);
-
-    EEPROM.commit();
-    Serial.println("Records saved to EEPROM.");
-}
-
-void RecordManager::loadRecordsFromEEPROM() {
-    EEPROM.begin(EEPROM_SIZE);
-    int addr = EEPROM_ADDR_RECORDS;
-
-    // Load daily and weekly records first
-    EEPROM.get(addr, highTempOfTheDay); addr += sizeof(Record);
-    EEPROM.get(addr, lowTempOfTheDay); addr += sizeof(Record);
-    EEPROM.get(addr, highHumidOfTheDay); addr += sizeof(Record);
-    EEPROM.get(addr, lowHumidOfTheDay); addr += sizeof(Record);
-    
-    EEPROM.get(addr, highTempOfTheWeek); addr += sizeof(Record);
-    EEPROM.get(addr, lowTempOfTheWeek); addr += sizeof(Record);
-    EEPROM.get(addr, highHumidOfTheWeek); addr += sizeof(Record);
-    EEPROM.get(addr, lowHumidOfTheWeek); addr += sizeof(Record);
-
-    // Then load rolling buffers
-    auto loadBuffer = [&](Record buffer[]) {
-        for (int i = 0; i < MAX_ROLLING_RECORDS; i++) {
-            uint32_t ts;
-            float val;
-            uint8_t type;
-            EEPROM.get(addr, ts); addr += sizeof(uint32_t);
-            EEPROM.get(addr, val); addr += sizeof(float);
-            EEPROM.get(addr, type); addr += sizeof(uint8_t);
-            buffer[i].dateTime = DateTime(ts);
-            buffer[i].value = val;
-            buffer[i].sensorType = (SensorType)type;
-        }
-    };
-
-    loadBuffer(rollingTempHighs);
-    loadBuffer(rollingTempLows);
-    loadBuffer(rollingHumidHighs);
-    loadBuffer(rollingHumidLows);
-
-    Serial.print("Loaded Temp High: ");
-    Serial.println(rollingTempHighs[0].value);
-    Serial.print("Loaded Temp Low: ");
-    Serial.println(rollingTempLows[0].value);
-
-    Serial.println("Records loaded from EEPROM.");
-}
 
 String RecordManager::getCurrentRecordsAsJSON() const {
     String json = "{";
