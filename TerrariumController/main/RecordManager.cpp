@@ -171,41 +171,6 @@ void RecordManager::loadRecords() {
   Serial.println("✅ Records loaded from LittleFS");
 }
 
-// Add this method implementation
-void RecordManager::clearRecords() {
-    // Remove the records file if it exists
-    if (LittleFS.exists(RECORD_FILE)) {
-        if (LittleFS.remove(RECORD_FILE)) {
-            Serial.println("✅ Records file removed successfully");
-        } else {
-            Serial.println("❌ Failed to remove records file");
-        }
-    }
-    
-    // Reset all records to initial values
-    highTempOfTheWeek = createInvalidHighRecord(TEMPERATURE);
-    lowTempOfTheWeek = createInvalidLowRecord(TEMPERATURE);
-    highTempOfTheDay = createInvalidHighRecord(TEMPERATURE);
-    lowTempOfTheDay = createInvalidLowRecord(TEMPERATURE);
-    
-    highHumidOfTheWeek = createInvalidHighRecord(HUMIDITY);
-    lowHumidOfTheWeek = createInvalidLowRecord(HUMIDITY);
-    highHumidOfTheDay = createInvalidHighRecord(HUMIDITY);
-    lowHumidOfTheDay = createInvalidLowRecord(HUMIDITY);
-    
-    // Initialize rolling buffers
-    for (int i = 0; i < MAX_ROLLING_RECORDS; i++) {
-        rollingTempHighs[i] = createInvalidHighRecord(TEMPERATURE);
-        rollingTempLows[i] = createInvalidLowRecord(TEMPERATURE);
-        rollingHumidHighs[i] = createInvalidHighRecord(HUMIDITY);
-        rollingHumidLows[i] = createInvalidLowRecord(HUMIDITY);
-    }
-    
-    recordsChanged = false; // Nothing to save
-    lastSaveTime = 0;
-    
-    Serial.println("✅ All records reset to default values");
-}
 // Add this method to your RecordManager.cpp file:
 
 String RecordManager::getCurrentRecordsAsJSON() {

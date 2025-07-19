@@ -27,8 +27,6 @@ private:
     BLECharacteristic* pScheduleRead;
     BLECharacteristic* pSensorRead;
     BLECharacteristic* pRecordRead;
-    BLECharacteristic* pClearSchedules;
-    BLECharacteristic* pClearRecords;
 };
 
 // Callback for writing to BLE characteristics
@@ -73,24 +71,6 @@ class RecordReadCallback : public BLECharacteristicCallbacks {
     public:
     RecordReadCallback();
     void onRead(BLECharacteristic* pCharacteristic) override;
-};
-
-// Add these new callback classes after the other callback classes
-// Callback for clearing schedules
-class ClearSchedulesCallback : public BLECharacteristicCallbacks {
-public:
-    ClearSchedulesCallback(TaskScheduler* sched);
-    void onWrite(BLECharacteristic* pCharacteristic) override;
-
-private:
-    TaskScheduler* scheduler;
-};
-
-// Callback for clearing records
-class ClearRecordsCallback : public BLECharacteristicCallbacks {
-public:
-    ClearRecordsCallback();
-    void onWrite(BLECharacteristic* pCharacteristic) override;
 };
 
 

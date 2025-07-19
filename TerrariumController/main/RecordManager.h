@@ -38,7 +38,6 @@ public:
     // Persistence via LittleFS
     void saveRecords();
     void loadRecords();
-    void clearRecords();
 
     // Helper methods for main.ino
     float getHighTempDaily() { return highTempOfTheDay.value; }
