@@ -15,6 +15,7 @@ public class ScheduleWizard : MonoBehaviour
     public Button nextButton;
     public Button backButton;
     public Button finishButton;
+    public Button closeButton;
     
     [Header("Primary Time Settings")]
     public TMP_Dropdown frequencyDropdown;
@@ -56,14 +57,14 @@ public class ScheduleWizard : MonoBehaviour
     private int _foggerFrequency, _foggerHour, _foggerMinute, _foggerAmPm;
     private int _foggerHour2, _foggerMinute2, _foggerAmPm2;
     
-    // Duration options in seconds
+    // Duration options in seconds - removed 10 and 30 second options
     private int[] _durationValues = new int[] { 
-        10, 30, 60, 300, 600, 900, 1800, 3600, 10800, 21600, 32400, 43200, 64800 
+        60, 300, 600, 900, 1800, 3600, 10800, 21600, 32400, 43200, 64800 
     };
     
-    // Duration display labels
+    // Duration display labels - removed 10 and 30 second options
     private string[] _durationLabels = new string[] {
-        "10 seconds", "30 seconds", "1 minute", "5 minutes", "10 minutes", 
+        "1 minute", "5 minutes", "10 minutes", 
         "15 minutes", "30 minutes", "1 hour", "3 hours", "6 hours", 
         "9 hours", "12 hours", "18 hours"
     };
@@ -74,6 +75,7 @@ public class ScheduleWizard : MonoBehaviour
         nextButton.onClick.AddListener(NextPage);
         backButton.onClick.AddListener(PreviousPage);
         finishButton.onClick.AddListener(ApplySettings);
+        closeButton.onClick.AddListener(CloseWizard);  // Add listener for close button
         
         // Initialize dropdowns
         SetupFrequencyDropdown();
@@ -90,10 +92,20 @@ public class ScheduleWizard : MonoBehaviour
         frequencyDropdown.onValueChanged.AddListener(OnFrequencyChanged);
     }
     
+    public void CloseWizard()
+    {
+        // Hide the wizard
+        gameObject.SetActive(false);
+        
+        // Reset status text and loading indicator
+        statusText.text = "";
+        loadingIndicator.SetActive(false);
+    }
+    
     private void SetupFrequencyDropdown()
     {
         frequencyDropdown.ClearOptions();
-        
+
         List<string> options = new List<string>
         {
             "Always On",
@@ -105,7 +117,7 @@ public class ScheduleWizard : MonoBehaviour
             "Twice Monthly",
             "Off"
         };
-        
+
         frequencyDropdown.AddOptions(options);
     }
     
@@ -138,13 +150,15 @@ public class ScheduleWizard : MonoBehaviour
     private void SetupMinuteDropdown(TMP_Dropdown dropdown)
     {
         dropdown.ClearOptions();
-        List<string> minuteOptions = new List<string>
+        List<string> minuteOptions = new List<string>();
+        
+        // Generate options from 0 to 55 minutes in 5-minute increments
+        for (int i = 0; i <= 55; i += 5)
         {
-            "00",
-            "15",
-            "30",
-            "45"
-        };
+            // Format as "00", "05", "10", etc.
+            minuteOptions.Add(i.ToString("00"));
+        }
+        
         dropdown.AddOptions(minuteOptions);
     }
     
@@ -398,7 +412,7 @@ public class ScheduleWizard : MonoBehaviour
         
         // Format first time
         int displayHour1 = hour1 + 1; // Adjust for 0-based index
-        string minuteStr1 = minute1 == 0 ? "00" : (minute1 * 15).ToString();
+        string minuteStr1 = (minute1 * 5).ToString("00"); // Multiply by 5 instead of 15
         string amPmStr1 = amPm1 == 0 ? "AM" : "PM";
         
         string timeStr1 = $"{displayHour1}:{minuteStr1} {amPmStr1}";
@@ -408,7 +422,7 @@ public class ScheduleWizard : MonoBehaviour
         if (frequency == 2 || frequency == 4 || frequency == 6) // Twice-daily, twice-weekly, twice-monthly
         {
             int displayHour2 = hour2 + 1;
-            string minuteStr2 = minute2 == 0 ? "00" : (minute2 * 15).ToString();
+            string minuteStr2 = (minute2 * 5).ToString("00"); // Multiply by 5 instead of 15
             string amPmStr2 = amPm2 == 0 ? "AM" : "PM";
             
             string timeStr2 = $"{displayHour2}:{minuteStr2} {amPmStr2}";
@@ -570,8 +584,8 @@ public class ScheduleWizard : MonoBehaviour
             hourValue1 = 0;
         }
         
-        // Convert dropdown minute (0-3) to actual minutes (0, 15, 30, 45)
-        int minuteValue1 = minute1 * 15;
+        // Convert dropdown minute (0-12) to actual minutes (0, 5, 10, 15, ..., 55)
+        int minuteValue1 = minute1 * 5;
         
         // Get duration in seconds
         int durationSeconds1 = (target == ScheduleUpdateManager.ScheduleTarget.Fogger) 
@@ -595,7 +609,7 @@ public class ScheduleWizard : MonoBehaviour
             }
             
             // Convert dropdown minute (0-3) to actual minutes (0, 15, 30, 45)
-            int minuteValue2 = minute2 * 15;
+            int minuteValue2 = minute2 * 5;
             
             // Get duration in seconds for second schedule
             int durationSeconds2 = (target == ScheduleUpdateManager.ScheduleTarget.Fogger) 

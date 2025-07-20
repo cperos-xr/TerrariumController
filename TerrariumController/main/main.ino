@@ -23,12 +23,12 @@
 #include "RecordManager.h"
 
 // Pin definitions
-const int PIN_LIGHT = 4;
-const int PIN_WATER = 5;
+const int PIN_LIGHT = 3;//4;
+const int PIN_WATER = 4;//5;
 const int PIN_FOGGER = 20; // Fogger button simulation pin
 
-#define SDA_PIN     6
-#define SCL_PIN     7
+#define SDA_PIN     5//6
+#define SCL_PIN     6//7
 
 RTCManager rtc;
 TaskScheduler scheduler(PIN_LIGHT, PIN_WATER, PIN_FOGGER);
