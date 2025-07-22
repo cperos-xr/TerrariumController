@@ -23,17 +23,26 @@
 #include "RecordManager.h"
 
 // Pin definitions
-const int PIN_LIGHT = 4;
-const int PIN_WATER = 3;
+const int PIN_LIGHT = 3;//4;
+const int PIN_WATER = 4;//5;
+const int PIN_FOGGER = 20; // Fogger button simulation pin
 
-#define SDA_PIN     5
-#define SCL_PIN     6
+#define SDA_PIN     5//6
+#define SCL_PIN     6//7
 
 RTCManager rtc;
-TaskScheduler scheduler(PIN_LIGHT, PIN_WATER);
+TaskScheduler scheduler(PIN_LIGHT, PIN_WATER, PIN_FOGGER);
 BluetoothManager ble;
 DisplayManager dsp;
 RecordManager rcd;
+
+// Function to simulate fogger button press
+void pressFoggerButton() {
+    digitalWrite(PIN_FOGGER, HIGH);
+    delay(200); // Short pulse - simulating button press
+    digitalWrite(PIN_FOGGER, LOW);
+    Serial.println("Fogger button pressed");
+}
 
 void setup() 
 {
@@ -51,7 +60,7 @@ void setup()
   Serial.println("LittleFS mounted");
   rcd.initRecords();
   Serial.println("Setup started..."); // Debug message
-  while (!Serial); // Wait for serial to be ready
+  //while (!Serial); // Wait for serial to be ready
   Wire.begin(SDA_PIN, SCL_PIN);
   
   if (rtc.isRTCAvailable())
@@ -92,11 +101,13 @@ void setup()
   }
   Serial.println("Scan complete.");
 
-  
   pinMode(PIN_LIGHT, OUTPUT);
   pinMode(PIN_WATER, OUTPUT);
+  pinMode(PIN_FOGGER, OUTPUT); // Initialize fogger button pin
+  
   digitalWrite(PIN_LIGHT, LOW);
   digitalWrite(PIN_WATER, LOW);
+  digitalWrite(PIN_FOGGER, LOW); // Start with fogger button not pressed
   
   ble.initBLE(&scheduler, &rtc);
   ble.startAdvertising();
@@ -168,4 +179,16 @@ void loop()
 
     Serial.print("Current Temp C: ");
     Serial.println(tempC);
+  
+    // Make sure this is called to check schedules
+    now = rtc.getCurrentTime();
+    scheduler.updateTasks(now);
+  
+    // Add debug to verify schedules are being checked
+    static unsigned long lastDebugMillis = 0;
+    if (millis() - lastDebugMillis > 60000) { // Every minute
+      lastDebugMillis = millis();
+      now = rtc.getCurrentTime(); // Get fresh time
+      Serial.println("Checking schedules at " + String(now.hour()) + ":" + String(now.minute()));
+    }
 }

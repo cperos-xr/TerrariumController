@@ -1,43 +1,41 @@
 /* TaskScheduler.cpp */
 #include "TaskScheduler.h"
 
-// Constructor: initialize pins and state
-TaskScheduler::TaskScheduler(int lp, int wp)
+// Constructor
+TaskScheduler::TaskScheduler(int lp, int wp, int fp)
   : lightPin(lp)
   , waterPin(wp)
+  , foggerPin(fp)
   , lightRunning(false)
   , waterRunning(false)
+  , foggerRunning(false)
   , lightOffMillis(0)
   , waterOffMillis(0)
-{
-}
+  , foggerOffMillis(0)
+{}
 
-// Map a string to the corresponding ScheduleType enum
+// String → enum
 ScheduleType TaskScheduler::parseType(const String& s) {
-  if (s == "ALWAYS_ON")      return ALWAYS_ON;
-  if (s == "DAILY")          return DAILY;
-  if (s == "WEEKLY")         return WEEKLY;
-  if (s == "TWICE_DAILY")    return TWICE_DAILY;
-  if (s == "TWICE_WEEKLY")   return TWICE_WEEKLY;
-  if (s == "MONTHLY")        return MONTHLY;
-  if (s == "TWICE_MONTHLY")  return TWICE_MONTHLY;
-  return NONE;
+    if (s == "ALWAYS_ON")     return ALWAYS_ON;
+    if (s == "DAILY")         return DAILY;
+    if (s == "WEEKLY")        return WEEKLY;
+    if (s == "TWICE_DAILY")   return TWICE_DAILY;
+    if (s == "TWICE_WEEKLY")  return TWICE_WEEKLY;
+    if (s == "MONTHLY")       return MONTHLY;
+    if (s == "TWICE_MONTHLY") return TWICE_MONTHLY;
+    return NONE;
 }
 
-// Parse a comma-separated command and update the appropriate schedule
+// Parse “TARGET,TYPE,h1,m1,d1[,h2,m2]”
 void TaskScheduler::parseAndSetSchedule(const String& cmd) {
     String parts[8];
-    int count = 0;
-    int start = 0;
-
-    // Split by comma
+    int count = 0, start = 0;
     for (int i = 0; i <= cmd.length() && count < 8; ++i) {
         if (i == cmd.length() || cmd[i] == ',') {
             parts[count++] = cmd.substring(start, i);
             start = i + 1;
         }
     }
-
     if (count < 5) {
         Serial.println("Invalid command format");
         return;
@@ -47,248 +45,340 @@ void TaskScheduler::parseAndSetSchedule(const String& cmd) {
     sch.type      = parseType(parts[1]);
     sch.hour1     = parts[2].toInt();
     sch.minute1   = parts[3].toInt();
-    sch.duration1 = parts[4].toInt() * 1000;  // seconds → milliseconds
-
-    // Handle second time for TWICE_* schedules
-    if ((sch.type == TWICE_DAILY || sch.type == TWICE_WEEKLY || sch.type == TWICE_MONTHLY) && count >= 7) {
+    sch.duration1 = parts[4].toInt() * 1000;
+    if ((sch.type == TWICE_DAILY || sch.type == TWICE_WEEKLY || sch.type == TWICE_MONTHLY)
+        && count >= 7) {
         sch.hour2     = parts[5].toInt();
         sch.minute2   = parts[6].toInt();
         sch.duration2 = sch.duration1;
+    } else {
+        sch.hour2 = sch.minute2 = sch.duration2 = 0;
     }
 
-    // Assign to LIGHT or WATER schedule
+    bool wasL = (lightSchedule.type == ALWAYS_ON);
+    bool wasW = (waterSchedule.type == ALWAYS_ON);
+    bool wasF = (foggerSchedule.type == ALWAYS_ON);
+
     if (parts[0] == "LIGHT") {
         lightSchedule = sch;
         Serial.println("Light schedule updated.");
+        if (wasL && sch.type != ALWAYS_ON) {
+            digitalWrite(lightPin, LOW);
+            lightRunning = false;
+        } else if (!wasL && sch.type == ALWAYS_ON) {
+            digitalWrite(lightPin, HIGH);
+        } else if (sch.type == NONE) {
+            digitalWrite(lightPin, LOW);
+            lightRunning = false;
+        }
     }
     else if (parts[0] == "WATER") {
         waterSchedule = sch;
         Serial.println("Water schedule updated.");
+        if (wasW && sch.type != ALWAYS_ON) {
+            digitalWrite(waterPin, LOW);
+            waterRunning = false;
+        } else if (!wasW && sch.type == ALWAYS_ON) {
+            digitalWrite(waterPin, HIGH);
+        } else if (sch.type == NONE) {
+            digitalWrite(waterPin, LOW);
+            waterRunning = false;
+        }
+    }
+    else if (parts[0] == "FOGGER") {
+        foggerSchedule = sch;
+        Serial.println("Fogger schedule updated.");
+        if (wasF && sch.type != ALWAYS_ON) {
+            pressFoggerButton();
+            foggerRunning = false;
+        } else if (!wasF && sch.type == ALWAYS_ON) {
+            pressFoggerButton();
+        } else if (sch.type == NONE && foggerRunning) {
+            pressFoggerButton();
+            foggerRunning = false;
+        }
     }
     else {
-        Serial.println("Unknown target. Use LIGHT or WATER.");
+        Serial.println("Unknown target. Use LIGHT, WATER, or FOGGER.");
         return;
     }
-    
-    // Save schedules after update
+
     saveSchedules();
 }
 
-// Called every loop to check and trigger tasks
+// Called each loop
 void TaskScheduler::updateTasks(const DateTime& now) {
-  applySchedule(lightSchedule, lightPin, lightRunning, lightOffMillis, now);
-  applySchedule(waterSchedule, waterPin, waterRunning, waterOffMillis, now);
+    applySchedule(lightSchedule,  lightPin,  lightRunning,  lightOffMillis,  now);
+    applySchedule(waterSchedule,  waterPin,  waterRunning,  waterOffMillis,  now);
+    applySchedule(foggerSchedule, foggerPin, foggerRunning, foggerOffMillis, now);
 }
 
-// Core logic to turn pins on/off based on schedule and elapsed time
+// Core on/off logic
 void TaskScheduler::applySchedule(
-  const Schedule& sch,
-  int pin,
-  bool& running,
-  unsigned long& offTime,
-  const DateTime& now
+    const Schedule& sch,
+    int pin,
+    bool& running,
+    unsigned long& offTime,
+    const DateTime& now
 ) {
-  if (sch.type == NONE) return;
+    if (sch.type == NONE) return;
 
-  // ALWAYS_ON: keep the pin HIGH
-  if (sch.type == ALWAYS_ON) {
-    digitalWrite(pin, HIGH);
-    return;
-  }
-
-  // If currently running and time elapsed, turn off
-  if (running && millis() >= offTime) {
-    digitalWrite(pin, LOW);
-    running = false;
-  }
-
-  bool secondInstance = false;
-  if (!running && matchSchedule(now, sch, secondInstance)) {
-    int durationMs = secondInstance ? sch.duration2 : sch.duration1;
-    executeTask(pin, durationMs, running, offTime);
-  }
-}
-
-String TaskScheduler::getSchedulesAsString() {
-    String result = "LIGHT:";
-    
-    // Format light schedule
-    result += scheduleToString(lightSchedule, "LIGHT");
-    result += ";WATER:";
-    
-    // Format water schedule  
-    result += scheduleToString(waterSchedule, "WATER");
-    
-    return result;
-}
-
-// Helper method to convert schedule to string
-String TaskScheduler::scheduleToString(const Schedule& sch, const String& type) {
-    if (sch.type == NONE) {
-        return "NONE";
+    // ALWAYS_ON
+    if (sch.type == ALWAYS_ON) {
+        if (pin == foggerPin) {
+            if (!running) {
+                pressFoggerButton();
+                running = true;
+                offTime = millis() + 14400000 + 300000;
+            } else if (millis() > offTime) {
+                pressFoggerButton();
+                offTime = millis() + 14400000 + 300000;
+            }
+        } else {
+            digitalWrite(pin, HIGH);
+        }
+        return;
     }
-    
-    String typeStr;
-    switch (sch.type) {
-        case ALWAYS_ON: typeStr = "ALWAYS_ON"; break;
-        case DAILY: typeStr = "DAILY"; break;
-        case WEEKLY: typeStr = "WEEKLY"; break;
-        case TWICE_DAILY: typeStr = "TWICE_DAILY"; break;
-        case TWICE_WEEKLY: typeStr = "TWICE_WEEKLY"; break;
-        case MONTHLY: typeStr = "MONTHLY"; break;
-        case TWICE_MONTHLY: typeStr = "TWICE_MONTHLY"; break;
-        default: typeStr = "UNKNOWN"; break;
+
+    // turn off when duration elapses
+    if (pin != foggerPin && running && millis() >= offTime) {
+        digitalWrite(pin, LOW);
+        running = false;
     }
-    
-    String result = typeStr + "," + String(sch.hour1) + ":" + String(sch.minute1) + 
-                   "," + String(sch.duration1/1000) + "s";
-    
-    // Add second time for TWICE_* schedules
-    if (sch.type == TWICE_DAILY || sch.type == TWICE_WEEKLY || sch.type == TWICE_MONTHLY) {
-        result += "," + String(sch.hour2) + ":" + String(sch.minute2);
+
+    bool secondInstance = false;
+    if (!running && matchSchedule(now, sch, secondInstance)) {
+        int dur = secondInstance ? sch.duration2 : sch.duration1;
+        if (pin == foggerPin) {
+            pressFoggerButton();
+            running = true;
+            offTime  = millis() + 14400000; 
+        } else {
+            digitalWrite(pin, HIGH);
+            running = true;
+            offTime = millis() + dur;
+        }
     }
-    
-    return result;
 }
 
-// Engage the pin for the specified duration
-void TaskScheduler::executeTask(
-  int pin,
-  int durationMs,
-  bool& running,
-  unsigned long& offTime
-) {
-  digitalWrite(pin, HIGH);
-  running = true;
-  offTime = millis() + durationMs;
-}
-
-// Check if current DateTime matches the schedule trigger
+// matchSchedule: now → true if we should fire (once per minute)
 bool TaskScheduler::matchSchedule(
-  const DateTime& now,
-  const Schedule& sch,
-  bool& isSecond
+    const DateTime& now,
+    const Schedule& sch,
+    bool& isSecond
 ) {
-  switch (sch.type) {
-    case DAILY:
-      if (now.hour() == sch.hour1 && now.minute() == sch.minute1 && now.second() == 0) {
-        isSecond = false;
-        return true;
-      }
-      break;
-
-    case TWICE_DAILY:
-      if (now.second() == 0) {
-        if (now.hour() == sch.hour1 && now.minute() == sch.minute1) {
-          isSecond = false;
-          return true;
-        }
-        if (now.hour() == sch.hour2 && now.minute() == sch.minute2) {
-          isSecond = true;
-          return true;
-        }
-      }
-      break;
-
-    case TWICE_WEEKLY:
-      if (now.second() == 0) {
-        if (now.dayOfTheWeek() == 0 && now.hour() == sch.hour1
+    switch (sch.type) {
+      case DAILY:
+        if (now.hour() == sch.hour1
             && now.minute() == sch.minute1) {
           isSecond = false;
           return true;
         }
-        if (now.dayOfTheWeek() == 3 && now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = true;
-          return true;
-        }
-      }
-      break;
+        break;
 
-    case WEEKLY:
-      if (now.dayOfTheWeek() == 0 && now.hour() == sch.hour1
-          && now.minute() == sch.minute1 && now.second() == 0) {
-        isSecond = false;
-        return true;
-      }
-      break;
-
-    case TWICE_MONTHLY:
-      if (now.second() == 0) {
-        if (now.day() == 1 && now.hour() == sch.hour1
+      case TWICE_DAILY:
+        if (now.hour() == sch.hour1
             && now.minute() == sch.minute1) {
           isSecond = false;
           return true;
         }
-        if (now.day() == 15 && now.hour() == sch.hour1
+        if (now.hour() == sch.hour2
+            && now.minute() == sch.minute2) {
+          isSecond = true;
+          return true;
+        }
+        break;
+
+      case WEEKLY:
+        if (now.dayOfTheWeek() == 0
+            && now.hour() == sch.hour1
+            && now.minute() == sch.minute1) {
+          isSecond = false;
+          return true;
+        }
+        break;
+
+      case TWICE_WEEKLY:
+        if (now.dayOfTheWeek() == 0
+            && now.hour() == sch.hour1
+            && now.minute() == sch.minute1) {
+          isSecond = false;
+          return true;
+        }
+        if (now.dayOfTheWeek() == 3
+            && now.hour() == sch.hour1
             && now.minute() == sch.minute1) {
           isSecond = true;
           return true;
         }
-      }
-      break;
+        break;
 
-    case MONTHLY:
-      if (now.day() == 1 && now.hour() == sch.hour1
-          && now.minute() == sch.minute1 && now.second() == 0) {
-        isSecond = false;
-        return true;
-      }
-      break;
+      case MONTHLY:
+        if (now.day() == 1
+            && now.hour() == sch.hour1
+            && now.minute() == sch.minute1) {
+          isSecond = false;
+          return true;
+        }
+        break;
 
-    default:
-      break;
-  }
-  return false;
+      case TWICE_MONTHLY:
+        if (now.day() == 1
+            && now.hour() == sch.hour1
+            && now.minute() == sch.minute1) {
+          isSecond = false;
+          return true;
+        }
+        if (now.day() == 15
+            && now.hour() == sch.hour1
+            && now.minute() == sch.minute1) {
+          isSecond = true;
+          return true;
+        }
+        break;
+
+      default:
+        break;
+    }
+    return false;
 }
 
-// Add these new methods to save and load schedules
+// Persistence: save/load/clear
 
 bool TaskScheduler::saveSchedules() {
     File f = LittleFS.open(SCHEDULE_FILE, "w");
-    if (!f) {
-        Serial.println("❌ Failed to open schedule file for write");
-        return false;
-    }
-
-    // Write light schedule
-    f.write((uint8_t*)&lightSchedule, sizeof(Schedule));
-    
-    // Write water schedule
-    f.write((uint8_t*)&waterSchedule, sizeof(Schedule));
-
+    if (!f) { Serial.println("❌ Failed to open for write"); return false; }
+    f.write((uint8_t*)&lightSchedule,  sizeof(Schedule));
+    f.write((uint8_t*)&waterSchedule,  sizeof(Schedule));
+    f.write((uint8_t*)&foggerSchedule, sizeof(Schedule));
     f.close();
-    Serial.println("✅ Schedules saved to LittleFS");
+    Serial.println("✅ Schedules saved");
     return true;
 }
 
 bool TaskScheduler::loadSchedules() {
     if (!LittleFS.exists(SCHEDULE_FILE)) {
-        Serial.println("ℹ️ No schedule file found, using defaults");
+        Serial.println("ℹ️ No schedule file found");
         return false;
     }
-
     File f = LittleFS.open(SCHEDULE_FILE, "r");
-    if (!f) {
-        Serial.println("❌ Failed to open schedule file for read");
-        return false;
-    }
-
-    // Read light schedule
-    f.read((uint8_t*)&lightSchedule, sizeof(Schedule));
-    
-    // Read water schedule
-    f.read((uint8_t*)&waterSchedule, sizeof(Schedule));
-
+    if (!f) { Serial.println("❌ Failed to open for read"); return false; }
+    f.read((uint8_t*)&lightSchedule,  sizeof(Schedule));
+    f.read((uint8_t*)&waterSchedule,  sizeof(Schedule));
+    f.read((uint8_t*)&foggerSchedule, sizeof(Schedule));
     f.close();
-    Serial.println("✅ Schedules loaded from LittleFS");
-    
-    // Debug output
-    Serial.println("Loaded schedules:");
-    Serial.print("Light: ");
-    Serial.println(scheduleToString(lightSchedule, "LIGHT"));
-    Serial.print("Water: ");
-    Serial.println(scheduleToString(waterSchedule, "WATER"));
-    
+    Serial.println("✅ Schedules loaded");
     return true;
+}
+
+bool TaskScheduler::clearSchedules() {
+    if (LittleFS.exists(SCHEDULE_FILE)) {
+        if (!LittleFS.remove(SCHEDULE_FILE)) {
+            Serial.println("❌ Failed to remove file");
+            return false;
+        }
+    }
+    Schedule e = { NONE,0,0,0, 0,0,0 };
+    lightSchedule = waterSchedule = foggerSchedule = e;
+    digitalWrite(lightPin, LOW);
+    digitalWrite(waterPin, LOW);
+    if (foggerRunning) pressFoggerButton();
+    lightRunning = waterRunning = foggerRunning = false;
+    Serial.println("✅ Schedules cleared");
+    return true;
+}
+
+// (Unchanged) Stringify schedules:
+
+String TaskScheduler::getSchedulesAsString() {
+    String r = "LIGHT:"   + scheduleToString(lightSchedule,  "LIGHT")
+             + ";WATER:"  + scheduleToString(waterSchedule,  "WATER")
+             + ";FOGGER:" + scheduleToString(foggerSchedule, "FOGGER");
+    return r;
+}
+
+String TaskScheduler::getSchedulesAsJSON() {
+    String j = "{";
+    // Light
+    j += "\"light\":{";
+    j += "\"type\":\""   + scheduleTypeToString(lightSchedule.type) + "\",";
+    j += "\"hour1\":"   + String(lightSchedule.hour1)                   + ",";
+    j += "\"minute1\":" + String(lightSchedule.minute1)                 + ",";
+    j += "\"duration1\":" + String(lightSchedule.duration1/1000)        + ",";
+    if (lightSchedule.type == TWICE_DAILY || lightSchedule.type == TWICE_WEEKLY || lightSchedule.type == TWICE_MONTHLY) {
+      j += "\"hour2\":"   + String(lightSchedule.hour2)   + ",";
+      j += "\"minute2\":" + String(lightSchedule.minute2) + ",";
+      j += "\"duration2\":" + String(lightSchedule.duration2/1000);
+    } else {
+      j += "\"hour2\":0,\"minute2\":0,\"duration2\":0";
+    }
+    j += "},";
+    // Water
+    j += "\"water\":{";
+    j += "\"type\":\""   + scheduleTypeToString(waterSchedule.type) + "\",";
+    j += "\"hour1\":"   + String(waterSchedule.hour1)                + ",";
+    j += "\"minute1\":" + String(waterSchedule.minute1)              + ",";
+    j += "\"duration1\":" + String(waterSchedule.duration1/1000)     + ",";
+    if (waterSchedule.type == TWICE_DAILY || waterSchedule.type == TWICE_WEEKLY || waterSchedule.type == TWICE_MONTHLY) {
+      j += "\"hour2\":"   + String(waterSchedule.hour2)   + ",";
+      j += "\"minute2\":" + String(waterSchedule.minute2) + ",";
+      j += "\"duration2\":" + String(waterSchedule.duration2/1000);
+    } else {
+      j += "\"hour2\":0,\"minute2\":0,\"duration2\":0";
+    }
+    j += "},";
+    // Fogger
+    j += "\"fogger\":{";
+    j += "\"type\":\""   + scheduleTypeToString(foggerSchedule.type) + "\",";
+    j += "\"hour1\":"   + String(foggerSchedule.hour1)                + ",";
+    j += "\"minute1\":" + String(foggerSchedule.minute1)              + ",";
+    j += "\"duration1\":" + String(foggerSchedule.duration1/1000)     + ",";
+    if (foggerSchedule.type == TWICE_DAILY || foggerSchedule.type == TWICE_WEEKLY || foggerSchedule.type == TWICE_MONTHLY) {
+      j += "\"hour2\":"   + String(foggerSchedule.hour2)   + ",";
+      j += "\"minute2\":" + String(foggerSchedule.minute2) + ",";
+      j += "\"duration2\":" + String(foggerSchedule.duration2/1000);
+    } else {
+      j += "\"hour2\":0,\"minute2\":0,\"duration2\":0";
+    }
+    j += "}";
+    j += "}";
+    return j;
+}
+
+String TaskScheduler::scheduleToString(const Schedule& sch, const String& type) {
+    switch (sch.type) {
+      case ALWAYS_ON:
+        return type + " ALWAYS_ON";
+      case DAILY:
+        return type + " DAILY," + String(sch.hour1) + "," + String(sch.minute1) + "," + String(sch.duration1/1000);
+      case WEEKLY:
+        return type + " WEEKLY," + String(sch.hour1) + "," + String(sch.minute1) + "," + String(sch.duration1/1000);
+      case TWICE_DAILY:
+        return type + " TWICE_DAILY," + String(sch.hour1) + "," + String(sch.minute1) + "," +
+               String(sch.duration1/1000) + "," + String(sch.hour2) + "," + String(sch.minute2);
+      case TWICE_WEEKLY:
+        return type + " TWICE_WEEKLY," + String(sch.hour1) + "," + String(sch.minute1) + "," +
+               String(sch.duration1/1000) + "," + String(sch.hour2) + "," + String(sch.minute2);
+      case MONTHLY:
+        return type + " MONTHLY," + String(sch.hour1) + "," + String(sch.minute1) + "," + String(sch.duration1/1000);
+      case TWICE_MONTHLY:
+        return type + " TWICE_MONTHLY," + String(sch.hour1) + "," + String(sch.minute1) + "," +
+               String(sch.duration1/1000) + "," + String(sch.hour2) + "," + String(sch.minute2);
+      default:
+        return type + " NONE";
+    }
+}
+
+String scheduleTypeToString(ScheduleType type) {
+    switch (type) {
+      case NONE:           return "NONE";
+      case ALWAYS_ON:      return "ALWAYS_ON";
+      case DAILY:          return "DAILY";
+      case WEEKLY:         return "WEEKLY";
+      case TWICE_DAILY:    return "TWICE_DAILY";
+      case TWICE_WEEKLY:   return "TWICE_WEEKLY";
+      case MONTHLY:        return "MONTHLY";
+      case TWICE_MONTHLY:  return "TWICE_MONTHLY";
+      default:             return "UNKNOWN";
+    }
 }

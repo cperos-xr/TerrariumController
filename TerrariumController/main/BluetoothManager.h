@@ -11,6 +11,9 @@
 #include "SensorManager.h"
 #include "RecordManager.h"
 
+// Function declaration for pressFoggerButton (defined in main.ino)
+void pressFoggerButton();
+
 class BluetoothManager {
 public:
     void initBLE(TaskScheduler* sched, RTCManager* rtcMgr);
@@ -24,9 +27,19 @@ private:
     BLEService* pService;
     BLECharacteristic* pRxWater;
     BLECharacteristic* pRtcTime;
+    BLECharacteristic* pRtcWrite; 
     BLECharacteristic* pScheduleRead;
     BLECharacteristic* pSensorRead;
     BLECharacteristic* pRecordRead;
+    BLECharacteristic* pClearSchedules;
+    BLECharacteristic* pClearRecords;
+    BLECharacteristic* pFoggerButton; // New characteristic for fogger button
+};
+
+// Add the fogger button callback class
+class FoggerButtonCallback : public BLECharacteristicCallbacks {
+public:
+    void onWrite(BLECharacteristic* pCharacteristic) override;
 };
 
 // Callback for writing to BLE characteristics
@@ -44,6 +57,15 @@ class RTCReadCallback : public BLECharacteristicCallbacks {
 public:
     RTCReadCallback(RTCManager* rtcMgr);
     void onRead(BLECharacteristic* pCharacteristic) override;
+
+private:
+    RTCManager* rtc;
+};
+
+class RTCWriteCallback : public BLECharacteristicCallbacks {
+public:
+    RTCWriteCallback(RTCManager* rtcMgr);
+    void onWrite(BLECharacteristic* pCharacteristic) override;
 
 private:
     RTCManager* rtc;
@@ -71,6 +93,24 @@ class RecordReadCallback : public BLECharacteristicCallbacks {
     public:
     RecordReadCallback();
     void onRead(BLECharacteristic* pCharacteristic) override;
+};
+
+// Add these new callback classes after the other callback classes
+// Callback for clearing schedules
+class ClearSchedulesCallback : public BLECharacteristicCallbacks {
+public:
+    ClearSchedulesCallback(TaskScheduler* sched);
+    void onWrite(BLECharacteristic* pCharacteristic) override;
+
+private:
+    TaskScheduler* scheduler;
+};
+
+// Callback for clearing records
+class ClearRecordsCallback : public BLECharacteristicCallbacks {
+public:
+    ClearRecordsCallback();
+    void onWrite(BLECharacteristic* pCharacteristic) override;
 };
 
 
