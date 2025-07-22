@@ -45,6 +45,16 @@ public:
     bool loadSchedules();
     bool clearSchedules();
 
+    // New manual toggle methods
+    void toggleLight();
+    void toggleWater();
+    void toggleFogger();
+
+    // Get current device states
+    bool getLightState() const { return lightRunning; }
+    bool getWaterState() const { return waterRunning; }
+    bool getFoggerState() const { return foggerRunning; }
+
 private:
     int lightPin, waterPin, foggerPin;
     Schedule lightSchedule, waterSchedule, foggerSchedule;

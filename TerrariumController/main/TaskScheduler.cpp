@@ -106,10 +106,47 @@ void TaskScheduler::parseAndSetSchedule(const String& cmd) {
     saveSchedules();
 }
 
-// Called each loop
+// Manual toggle implementations - simplified version
+void TaskScheduler::toggleLight() {
+    if (lightRunning) {
+        digitalWrite(lightPin, LOW);
+        lightRunning = false;
+        Serial.println("Light manually turned OFF");
+    } else {
+        digitalWrite(lightPin, HIGH);
+        lightRunning = true;
+        Serial.println("Light manually turned ON");
+    }
+    // No override flags - schedule will take over immediately
+}
+
+void TaskScheduler::toggleWater() {
+    if (waterRunning) {
+        digitalWrite(waterPin, LOW);
+        waterRunning = false;
+        Serial.println("Water manually turned OFF");
+    } else {
+        digitalWrite(waterPin, HIGH);
+        waterRunning = true;
+        Serial.println("Water manually turned ON");
+    }
+    // No override flags - schedule will take over immediately
+}
+
+void TaskScheduler::toggleFogger() {
+    // For fogger, we just press the button - it toggles the state
+    pressFoggerButton();
+    foggerRunning = !foggerRunning;
+    Serial.println(foggerRunning ? "Fogger manually turned ON" : "Fogger manually turned OFF");
+    // No override flags - schedule will take over immediately
+}
+
+// Called each loop - now without override checks
 void TaskScheduler::updateTasks(const DateTime& now) {
-    applySchedule(lightSchedule,  lightPin,  lightRunning,  lightOffMillis,  now);
-    applySchedule(waterSchedule,  waterPin,  waterRunning,  waterOffMillis,  now);
+    // No need to check overrides anymore
+    // Apply schedules directly
+    applySchedule(lightSchedule, lightPin, lightRunning, lightOffMillis, now);
+    applySchedule(waterSchedule, waterPin, waterRunning, waterOffMillis, now);
     applySchedule(foggerSchedule, foggerPin, foggerRunning, foggerOffMillis, now);
 }
 

@@ -34,6 +34,9 @@ private:
     BLECharacteristic* pClearSchedules;
     BLECharacteristic* pClearRecords;
     BLECharacteristic* pFoggerButton; // New characteristic for fogger button
+    BLECharacteristic* pToggleLight;   // New characteristic for toggling light
+    BLECharacteristic* pToggleWater;   // New characteristic for toggling water
+    BLECharacteristic* pToggleFogger;  // New characteristic for toggling fogger
 };
 
 // Add the fogger button callback class
@@ -111,6 +114,34 @@ class ClearRecordsCallback : public BLECharacteristicCallbacks {
 public:
     ClearRecordsCallback();
     void onWrite(BLECharacteristic* pCharacteristic) override;
+};
+
+// Add the toggle callbacks
+class ToggleLightCallback : public BLECharacteristicCallbacks {
+public:
+    ToggleLightCallback(TaskScheduler* sched);
+    void onWrite(BLECharacteristic* pCharacteristic) override;
+    void onRead(BLECharacteristic* pCharacteristic) override;
+private:
+    TaskScheduler* scheduler;
+};
+
+class ToggleWaterCallback : public BLECharacteristicCallbacks {
+public:
+    ToggleWaterCallback(TaskScheduler* sched);
+    void onWrite(BLECharacteristic* pCharacteristic) override;
+    void onRead(BLECharacteristic* pCharacteristic) override;
+private:
+    TaskScheduler* scheduler;
+};
+
+class ToggleFoggerCallback : public BLECharacteristicCallbacks {
+public:
+    ToggleFoggerCallback(TaskScheduler* sched);
+    void onWrite(BLECharacteristic* pCharacteristic) override;
+    void onRead(BLECharacteristic* pCharacteristic) override;
+private:
+    TaskScheduler* scheduler;
 };
 
 

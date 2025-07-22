@@ -12,6 +12,9 @@
 #define CHARACTERISTIC_UUID_CLEAR_RECORDS "12345678-1234-5678-1234-56789abcdef9" // UUID for clearing records
 #define CHARACTERISTIC_UUID_WRITE_RTC   "12345678-1234-5678-1234-56789abcdefa" // New UUID for writing to RTC
 #define CHARACTERISTIC_UUID_FOGGER_BUTTON "12345678-1234-5678-1234-56789abcdefb" // New UUID for fogger button
+#define CHARACTERISTIC_UUID_TOGGLE_LIGHT "12345678-1234-5678-1234-56789abcdefc"
+#define CHARACTERISTIC_UUID_TOGGLE_WATER "12345678-1234-5678-1234-56789abcdefd"
+#define CHARACTERISTIC_UUID_TOGGLE_FOGGER "12345678-1234-5678-1234-56789abcdefe"
 
 // Server callback class to handle connections
 class ServerCallbacks : public BLEServerCallbacks {
@@ -115,6 +118,33 @@ void BluetoothManager::initBLE(TaskScheduler* sched, RTCManager* rtcMgr) {
     pFoggerButton->setCallbacks(new FoggerButtonCallback());
     pFoggerButton->setValue("Send 'PRESS' to activate fogger button");
 
+    // Add the toggle light characteristic
+    pToggleLight = pService->createCharacteristic(
+        CHARACTERISTIC_UUID_TOGGLE_LIGHT,
+        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ
+    );
+    pToggleLight->addDescriptor(new BLE2902());
+    pToggleLight->setCallbacks(new ToggleLightCallback(scheduler));
+    pToggleLight->setValue("Send 'TOGGLE' to switch light state");
+    
+    // Add the toggle water characteristic
+    pToggleWater = pService->createCharacteristic(
+        CHARACTERISTIC_UUID_TOGGLE_WATER,
+        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ
+    );
+    pToggleWater->addDescriptor(new BLE2902());
+    pToggleWater->setCallbacks(new ToggleWaterCallback(scheduler));
+    pToggleWater->setValue("Send 'TOGGLE' to switch water state");
+    
+    // Add the toggle fogger characteristic
+    pToggleFogger = pService->createCharacteristic(
+        CHARACTERISTIC_UUID_TOGGLE_FOGGER,
+        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ
+    );
+    pToggleFogger->addDescriptor(new BLE2902());
+    pToggleFogger->setCallbacks(new ToggleFoggerCallback(scheduler));
+    pToggleFogger->setValue("Send 'TOGGLE' to switch fogger state");
+    
     pService->start();
     
     // Configure advertising
@@ -259,4 +289,58 @@ void FoggerButtonCallback::onWrite(BLECharacteristic* pCharacteristic) {
         pCharacteristic->setValue("Invalid command. Send 'PRESS' to activate fogger");
         Serial.println("❌ Invalid fogger command received via BLE");
     }
+}
+
+// Light toggle callback implementations
+ToggleLightCallback::ToggleLightCallback(TaskScheduler* sched) : scheduler(sched) {}
+
+void ToggleLightCallback::onWrite(BLECharacteristic* pCharacteristic) {
+    String value = pCharacteristic->getValue();
+    if (value == "TOGGLE") {
+        scheduler->toggleLight();
+        pCharacteristic->setValue(scheduler->getLightState() ? "Light ON" : "Light OFF");
+        Serial.println("Light toggled via BLE");
+    } else {
+        pCharacteristic->setValue("Invalid command. Send 'TOGGLE' to switch light state");
+    }
+}
+
+void ToggleLightCallback::onRead(BLECharacteristic* pCharacteristic) {
+    pCharacteristic->setValue(scheduler->getLightState() ? "Light ON" : "Light OFF");
+}
+
+// Water toggle callback implementations
+ToggleWaterCallback::ToggleWaterCallback(TaskScheduler* sched) : scheduler(sched) {}
+
+void ToggleWaterCallback::onWrite(BLECharacteristic* pCharacteristic) {
+    String value = pCharacteristic->getValue();
+    if (value == "TOGGLE") {
+        scheduler->toggleWater();
+        pCharacteristic->setValue(scheduler->getWaterState() ? "Water ON" : "Water OFF");
+        Serial.println("Water toggled via BLE");
+    } else {
+        pCharacteristic->setValue("Invalid command. Send 'TOGGLE' to switch water state");
+    }
+}
+
+void ToggleWaterCallback::onRead(BLECharacteristic* pCharacteristic) {
+    pCharacteristic->setValue(scheduler->getWaterState() ? "Water ON" : "Water OFF");
+}
+
+// Fogger toggle callback implementations
+ToggleFoggerCallback::ToggleFoggerCallback(TaskScheduler* sched) : scheduler(sched) {}
+
+void ToggleFoggerCallback::onWrite(BLECharacteristic* pCharacteristic) {
+    String value = pCharacteristic->getValue();
+    if (value == "TOGGLE") {
+        scheduler->toggleFogger();
+        pCharacteristic->setValue(scheduler->getFoggerState() ? "Fogger ON" : "Fogger OFF");
+        Serial.println("Fogger toggled via BLE");
+    } else {
+        pCharacteristic->setValue("Invalid command. Send 'TOGGLE' to switch fogger state");
+    }
+}
+
+void ToggleFoggerCallback::onRead(BLECharacteristic* pCharacteristic) {
+    pCharacteristic->setValue(scheduler->getFoggerState() ? "Fogger ON" : "Fogger OFF");
 }
