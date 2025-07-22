@@ -44,7 +44,7 @@ void BluetoothManager::initBLE(TaskScheduler* sched, RTCManager* rtcMgr) {
     pServer->setCallbacks(new ServerCallbacks());
     
     // Create a larger service to accommodate all characteristics
-    pService = pServer->createService(BLEUUID(SERVICE_UUID), 35);  // Increase the handles count to 35
+    pService = pServer->createService(BLEUUID(SERVICE_UUID), 40);  // Increase the handles count to 40
 
     pRxWater = pService->createCharacteristic(
         CHARACTERISTIC_UUID_WRITE_SCHEDULES,
