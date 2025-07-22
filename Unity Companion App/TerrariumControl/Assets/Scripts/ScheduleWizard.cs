@@ -519,6 +519,8 @@ public class ScheduleWizard : MonoBehaviour
             _waterAmPm2,
             _waterDuration2
         ));
+
+        yield return new WaitForSeconds(2.2f);
         
         // Apply Fogger Settings (use 1 as duration placeholder - fogger has 4-hour built-in timer)
         yield return StartCoroutine(ApplyDeviceSettings(
@@ -527,11 +529,11 @@ public class ScheduleWizard : MonoBehaviour
             _foggerHour,
             _foggerMinute,
             _foggerAmPm,
-            0, // Placeholder for fogger
+            60, // Placeholder for fogger
             _foggerHour2,
             _foggerMinute2,
             _foggerAmPm2,
-            0  // Placeholder for fogger
+            60  // Placeholder for fogger
         ));
         
         // All done
@@ -589,7 +591,7 @@ public class ScheduleWizard : MonoBehaviour
         
         // Get duration in seconds
         int durationSeconds1 = (target == ScheduleUpdateManager.ScheduleTarget.Fogger) 
-            ? 1 // Placeholder for fogger (uses its own 4-hour timer)
+            ? 60 // Placeholder for fogger (uses its own 4-hour timer)
             : _durationValues[durationIndex1];
             
         // For twice-daily, twice-weekly, twice-monthly schedules

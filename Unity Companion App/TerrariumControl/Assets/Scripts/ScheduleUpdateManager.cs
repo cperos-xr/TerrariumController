@@ -21,204 +21,132 @@ public class ScheduleUpdateManager : MonoBehaviour
         TwiceMonthly 
     }
     
-    // Event that fires when schedules are updated successfully
+    // Fires when schedules are updated and UI refreshed
     public static event Action OnSchedulesUpdated;
     
-    // Reference to the ScheduleUIManager to refresh the display
+    // Inspector‑assigned reference to your UI display class
     public ScheduleUIManager scheduleUIManager;
     
-    // Helper method to convert enum to string format ESP32 expects
+    // Convert our enum into the exact string the ESP32 expects
     private string GetFrequencyString(ScheduleFrequency frequency)
     {
         switch (frequency)
         {
-            case ScheduleFrequency.None: return "NONE";
-            case ScheduleFrequency.AlwaysOn: return "ALWAYS_ON";
-            case ScheduleFrequency.Daily: return "DAILY";
-            case ScheduleFrequency.Weekly: return "WEEKLY";
-            case ScheduleFrequency.TwiceDaily: return "TWICE_DAILY";
-            case ScheduleFrequency.TwiceWeekly: return "TWICE_WEEKLY";
-            case ScheduleFrequency.Monthly: return "MONTHLY";
+            case ScheduleFrequency.None:         return "NONE";
+            case ScheduleFrequency.AlwaysOn:     return "ALWAYS_ON";
+            case ScheduleFrequency.Daily:        return "DAILY";
+            case ScheduleFrequency.Weekly:       return "WEEKLY";
+            case ScheduleFrequency.TwiceDaily:   return "TWICE_DAILY";
+            case ScheduleFrequency.TwiceWeekly:  return "TWICE_WEEKLY";
+            case ScheduleFrequency.Monthly:      return "MONTHLY";
             case ScheduleFrequency.TwiceMonthly: return "TWICE_MONTHLY";
-            default: return "NONE";
+            default:                             return "NONE";
         }
     }
     
     /// <summary>
-    /// Updates a schedule for either light or water
+    /// Updates a single‑time schedule (e.g. NONE, ALWAYS_ON, DAILY, WEEKLY, MONTHLY)
+    /// for Light, Water or Fogger.
     /// </summary>
-    /// <param name="target">Light or Water</param>
-    /// <param name="frequency">Schedule frequency type</param>
-    /// <param name="hour1">First activation hour (0-23)</param>
-    /// <param name="minute1">First activation minute (0-59)</param>
-    /// <param name="durationSeconds">Duration in seconds</param>
-    public void UpdateSchedule(ScheduleTarget target, ScheduleFrequency frequency, 
-                              int hour1, int minute1, int durationSeconds)
-    {
-        string targetStr = target == ScheduleTarget.Light ? "LIGHT" : "WATER";
-        string frequencyStr = GetFrequencyString(frequency);
+    public void UpdateSchedule(
+        ScheduleTarget target,
+        ScheduleFrequency frequency,
+        int hour1,
+        int minute1,
+        int durationSeconds
+    ) {
+        string targetStr = target == ScheduleTarget.Light  ? "LIGHT"
+                         : target == ScheduleTarget.Water  ? "WATER"
+                         :                                  "FOGGER";
+        string freqStr   = GetFrequencyString(frequency);
+        string cmd       = $"{targetStr},{freqStr},{hour1},{minute1},{durationSeconds}";
         
-        // Format command string: TARGET,TYPE,h1,m1,d1
-        string command = $"{targetStr},{frequencyStr},{hour1},{minute1},{durationSeconds}";
-        
-        StartCoroutine(SendScheduleUpdateAndRefresh(command));
+        Debug.Log($"[BLE] Sending schedule update → {cmd}");
+        StartCoroutine(SendScheduleUpdateAndRefresh(cmd));
     }
     
     /// <summary>
-    /// Updates a twice-daily, twice-weekly, or twice-monthly schedule
+    /// Updates a “twice‑per‑period” schedule (e.g. TWICE_DAILY, TWICE_WEEKLY, TWICE_MONTHLY).
     /// </summary>
-    public void UpdateTwiceSchedule(ScheduleTarget target, ScheduleFrequency frequency, 
-                                  int hour1, int minute1, int hour2, int minute2, int durationSeconds)
-    {
-        // Only certain frequencies support twice-scheduling
-        if (frequency != ScheduleFrequency.TwiceDaily && 
-            frequency != ScheduleFrequency.TwiceWeekly && 
+    public void UpdateTwiceSchedule(
+        ScheduleTarget target,
+        ScheduleFrequency frequency,
+        int hour1,
+        int minute1,
+        int hour2,
+        int minute2,
+        int durationSeconds
+    ) {
+        if (frequency != ScheduleFrequency.TwiceDaily &&
+            frequency != ScheduleFrequency.TwiceWeekly &&
             frequency != ScheduleFrequency.TwiceMonthly)
         {
-            Debug.LogError($"Frequency {frequency} does not support twice-scheduling");
+            Debug.LogError($"Frequency {frequency} does not support twice‑scheduling");
             return;
         }
         
-        string targetStr = target == ScheduleTarget.Light ? "LIGHT" : "WATER";
-        string frequencyStr = GetFrequencyString(frequency);
+        string targetStr = target == ScheduleTarget.Light  ? "LIGHT"
+                         : target == ScheduleTarget.Water  ? "WATER"
+                         :                                  "FOGGER";
+        string freqStr   = GetFrequencyString(frequency);
+        string cmd       = $"{targetStr},{freqStr},{hour1},{minute1},{durationSeconds},{hour2},{minute2}";
         
-        // Format command string: TARGET,TYPE,h1,m1,d1,h2,m2
-        string command = $"{targetStr},{frequencyStr},{hour1},{minute1},{durationSeconds},{hour2},{minute2}";
-        
-        StartCoroutine(SendScheduleUpdateAndRefresh(command));
+        Debug.Log($"[BLE] Sending twice schedule update → {cmd}");
+        StartCoroutine(SendScheduleUpdateAndRefresh(cmd));
     }
     
     /// <summary>
-    /// Set to NONE (disabled) schedule
+    /// Clears (NONE) a schedule for any target.
     /// </summary>
     public void DisableSchedule(ScheduleTarget target)
     {
-        string targetStr = target == ScheduleTarget.Light ? "LIGHT" : "WATER";
+        string targetStr = target == ScheduleTarget.Light  ? "LIGHT"
+                         : target == ScheduleTarget.Water  ? "WATER"
+                         :                                  "FOGGER";
+        string cmd       = $"{targetStr},NONE,0,0,0";
         
-        // Format command for NONE schedule (with dummy values)
-        string command = $"{targetStr},NONE,0,0,0";
-        
-        StartCoroutine(SendScheduleUpdateAndRefresh(command));
+        Debug.Log($"[BLE] Sending disable schedule → {cmd}");
+        StartCoroutine(SendScheduleUpdateAndRefresh(cmd));
     }
     
     /// <summary>
-    /// Set to ALWAYS_ON schedule
+    /// Sets an ALWAYS_ON schedule for any target.
     /// </summary>
     public void SetAlwaysOn(ScheduleTarget target)
     {
-        string targetStr = target == ScheduleTarget.Light ? "LIGHT" : "WATER";
+        string targetStr = target == ScheduleTarget.Light  ? "LIGHT"
+                         : target == ScheduleTarget.Water  ? "WATER"
+                         :                                  "FOGGER";
+        string cmd       = $"{targetStr},ALWAYS_ON,0,0,0";
         
-        // Format command for ALWAYS_ON schedule (with dummy values)
-        string command = $"{targetStr},ALWAYS_ON,0,0,0";
-        
-        StartCoroutine(SendScheduleUpdateAndRefresh(command));
+        Debug.Log($"[BLE] Sending always‑on schedule → {cmd}");
+        StartCoroutine(SendScheduleUpdateAndRefresh(cmd));
     }
     
-    // After updating the fogger schedule, force a refresh of the UI:
-    public void UpdateFoggerSchedule(ScheduleFrequency frequency, int hour, int minute)
-    {
-        // Create the command string
-        string targetStr = "FOGGER";
-        string frequencyStr = GetFrequencyString(frequency); // Corrected method name
-        
-        // For fogger, we use a very short duration (1 second) since it has its own 4-hour timer
-        string command = $"{targetStr},{frequencyStr},{hour},{minute},1";
-        
-        // Send the command with standard refresh (instead of special refresh)
-        StartCoroutine(SendScheduleUpdateAndRefresh(command));
-        
-        // Add debug to verify
-        Debug.Log($"Sent fogger update: {command}");
-    }
-
+    // Sends the command, waits, then reads back & refreshes the UI
     private IEnumerator SendScheduleUpdateAndRefresh(string command)
     {
-        Debug.Log($"Sending schedule update: {command}");
-        
-        // Send the command to the ESP32
         TerrariumBleController.Instance.WriteSchedule(command);
+        yield return new WaitForSeconds(1f);
         
-        // Wait a moment for the ESP32 to process
-        yield return new WaitForSeconds(1.0f);
-        
-        // Read back the updated schedules
         TerrariumBleController.Instance.ReadSchedules();
+        yield return new WaitForSeconds(1f);
         
-        // Wait a moment for the read to complete
-        yield return new WaitForSeconds(1.0f);
-        
-        // Refresh the UI
         if (scheduleUIManager != null)
         {
             try
             {
-                string schedulesJson = TerrariumBleController.Instance._schedulesString;
-                if (!string.IsNullOrEmpty(schedulesJson))
+                string json = TerrariumBleController.Instance._schedulesString;
+                var data = JsonUtility.FromJson<SchedulesResponse>(json);
+                if (data != null)
                 {
-                    SchedulesResponse data = JsonUtility.FromJson<SchedulesResponse>(schedulesJson);
-                    if (data != null)
-                    {
-                        scheduleUIManager.DisplaySchedules(data);
-                        Debug.Log("Schedule UI refreshed successfully");
-                        
-                        // Notify listeners that schedules were updated
-                        OnSchedulesUpdated?.Invoke();
-                    }
+                    scheduleUIManager.DisplaySchedules(data);
+                    OnSchedulesUpdated?.Invoke();
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error refreshing schedules: {ex.Message}");
-            }
-        }
-    }
-
-    private IEnumerator SendScheduleUpdateWithExtraRefresh(string command)
-    {
-        Debug.Log($"Sending schedule update: {command}");
-
-        // Send the command to the ESP32
-        TerrariumBleController.Instance.WriteSchedule(command);
-
-        // Wait extra time for the ESP32 to process
-        yield return new WaitForSeconds(1.5f);
-
-        // Read back the updated schedules
-        TerrariumBleController.Instance.ReadSchedules();
-
-        // Wait extra time for the read to complete
-        yield return new WaitForSeconds(1.5f);
-
-        // Force another read to ensure fresh data
-        TerrariumBleController.Instance.ReadSchedules();
-
-        // Wait again
-        yield return new WaitForSeconds(1.0f);
-
-        // Refresh the UI
-        if (scheduleUIManager != null)
-        {
-            try
-            {
-                string schedulesJson = TerrariumBleController.Instance._schedulesString;
-                Debug.Log("Extra refresh - Raw schedules JSON: " + schedulesJson);
-
-                if (!string.IsNullOrEmpty(schedulesJson))
-                {
-                    SchedulesResponse data = JsonUtility.FromJson<SchedulesResponse>(schedulesJson);
-                    if (data != null)
-                    {
-                        scheduleUIManager.DisplaySchedules(data);
-                        Debug.Log("Schedule UI refreshed successfully with extra attempt");
-
-                        // Notify listeners that schedules were updated
-                        OnSchedulesUpdated?.Invoke();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error in extra refresh: {ex.Message}");
+                Debug.LogError($"Error parsing/refreshing schedules: {ex.Message}");
             }
         }
     }

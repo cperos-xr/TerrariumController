@@ -279,14 +279,30 @@ public class TerrariumBleController : MonoBehaviour
     /// <param name="command">Command string in format: TARGET,TYPE,h1,m1,d1[,h2,m2]</param>
     public void WriteSchedule(string command)
     {
-        if (!_mtuDone) { statusText.text = "Not ready"; return; }
-        var data = Encoding.UTF8.GetBytes(command);
+        if (!_mtuDone) {
+            statusText.text = "Not ready";
+            Debug.LogWarning("[BLE] MTU not complete – cannot send schedule");
+            return;
+        }
+
+        // Log *before* sending so you can see the exact command
+        Debug.Log($"[BLE] → Writing schedule to {WriteScheduleUUID}: \"{command}\"");
+
+        byte[] data = Encoding.UTF8.GetBytes(command);
         BluetoothLEHardwareInterface.WriteCharacteristic(
-            _deviceAddress, ServiceUUID, WriteScheduleUUID,
-            data, data.Length, true,
-            chr => statusText.text = "Schedule sent"
+            _deviceAddress,
+            ServiceUUID,
+            WriteScheduleUUID,
+            data,
+            data.Length,
+            false,  // <-- Write WITHOUT response to match ESP32 PROPERTY_WRITE
+            chr => {
+                statusText.text = "Schedule sent";
+                Debug.Log($"[BLE] ✓ Write succeeded for \"{command}\"");
+            }
         );
     }
+
 
     public void ClearSchedules()
     {
