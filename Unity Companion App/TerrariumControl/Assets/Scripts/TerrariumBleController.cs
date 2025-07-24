@@ -32,6 +32,9 @@ public class TerrariumBleController : MonoBehaviour
     public string ClearSchedulesUUID = "12345678-1234-5678-1234-56789abcdef8";
     public string ClearRecordsUUID = "12345678-1234-5678-1234-56789abcdef9";
     public string FoggerButtonUUID = "12345678-1234-5678-1234-56789abcdefb";
+    public string ToggleLightUUID = "12345678-1234-5678-1234-56789abcdefc";
+    public string ToggleWaterUUID = "12345678-1234-5678-1234-56789abcdefd";
+    public string ToggleFoggerUUID = "12345678-1234-5678-1234-56789abcdefe";
 
     [Header("UI Elements (assign in Inspector)")]
     public TextMeshProUGUI statusText;
@@ -441,4 +444,143 @@ public class TerrariumBleController : MonoBehaviour
             Debug.LogError($"Error pressing fogger button: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Toggles the light on/off using the direct toggle characteristic
+    /// </summary>
+    public void ToggleLight()
+    {
+        if (!IsConnected)
+        {
+            Debug.LogError("Cannot toggle light: BLE not connected");
+            return;
+        }
+        
+        try
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes("TOGGLE");
+            BluetoothLEHardwareInterface.WriteCharacteristic(
+                _deviceAddress, ServiceUUID, ToggleLightUUID,
+                bytes, bytes.Length,
+                true, (characteristic) => {
+                    ReadLightState(); // Read back the new state
+                    Debug.Log("Light toggle command sent successfully");
+                }
+            );
+            Debug.Log("Light toggle command sent");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error toggling light: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Toggles the water on/off using the direct toggle characteristic
+    /// </summary>
+    public void ToggleWater()
+    {
+        if (!IsConnected)
+        {
+            Debug.LogError("Cannot toggle water: BLE not connected");
+            return;
+        }
+        
+        try
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes("TOGGLE");
+            BluetoothLEHardwareInterface.WriteCharacteristic(
+                _deviceAddress, ServiceUUID, ToggleWaterUUID,
+                bytes, bytes.Length,
+                true, (characteristic) => {
+                    ReadWaterState(); // Read back the new state
+                    Debug.Log("Water toggle command sent successfully");
+                }
+            );
+            Debug.Log("Water toggle command sent");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error toggling water: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Toggles the fogger using the direct toggle characteristic
+    /// </summary>
+    public void ToggleFogger()
+    {
+        if (!IsConnected)
+        {
+            Debug.LogError("Cannot toggle fogger: BLE not connected");
+            return;
+        }
+        
+        try
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes("TOGGLE");
+            BluetoothLEHardwareInterface.WriteCharacteristic(
+                _deviceAddress, ServiceUUID, ToggleFoggerUUID,
+                bytes, bytes.Length,
+                true, (characteristic) => {
+                    ReadFoggerState(); // Optional: read back the new state
+                    Debug.Log("Fogger toggle command sent successfully");
+                }
+            );
+            Debug.Log("Fogger toggle command sent");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error toggling fogger: {ex.Message}");
+        }
+    }
+
+    // Optional: Methods to read current states
+    private string _lightState = "Unknown";
+    private string _waterState = "Unknown";
+    private string _foggerState = "Unknown";
+
+    public void ReadLightState()
+    {
+        if (!IsConnected) return;
+        
+        BluetoothLEHardwareInterface.ReadCharacteristic(
+            _deviceAddress, ServiceUUID, ToggleLightUUID,
+            (chr, bytes) => {
+                _lightState = Encoding.UTF8.GetString(bytes);
+                Debug.Log($"Light state: {_lightState}");
+            }
+        );
+    }
+
+    public void ReadWaterState()
+    {
+        if (!IsConnected) return;
+        
+        BluetoothLEHardwareInterface.ReadCharacteristic(
+            _deviceAddress, ServiceUUID, ToggleWaterUUID,
+            (chr, bytes) => {
+                _waterState = Encoding.UTF8.GetString(bytes);
+                Debug.Log($"Water state: {_waterState}");
+            }
+        );
+    }
+
+    public void ReadFoggerState()
+    {
+        if (!IsConnected) return;
+        
+        BluetoothLEHardwareInterface.ReadCharacteristic(
+            _deviceAddress, ServiceUUID, ToggleFoggerUUID,
+            (chr, bytes) => {
+                _foggerState = Encoding.UTF8.GetString(bytes);
+                Debug.Log($"Fogger state: {_foggerState}");
+            }
+        );
+    }
+
+    // Getters for the states
+    public string GetLightState() => _lightState;
+    public string GetWaterState() => _waterState;
+    public string GetFoggerState() => _foggerState;
 }

@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Text;
 
 public class ScheduleTestHelper : MonoBehaviour
 {
@@ -87,120 +88,51 @@ public class ScheduleTestHelper : MonoBehaviour
     // Toggle functions
     public void ToggleLight()
     {
-        StartCoroutine(ToggleLightCoroutine());
+        if (!TerrariumBleController.Instance.IsConnected)
+        {
+            Debug.LogError("Cannot toggle light: BLE not connected");
+            return;
+        }
+        
+        Debug.Log("Toggling light...");
+        
+        // Use the Instance to call the ToggleLight method - DON'T try to access UUIDs directly!
+        TerrariumBleController.Instance.ToggleLight();
+        
+        // Update UI after a short delay
+        StartCoroutine(UpdateToggleTextAfterDelay(toggleLightButtonText, "Light"));
+    }
+    
+    private IEnumerator UpdateLightTextAfterToggle()
+    {
+        yield return new WaitForSeconds(0.5f);
+        
+        // Read back the state and update text
+        TerrariumBleController.Instance.ReadLightState();
+        yield return new WaitForSeconds(0.5f);
+        
+        if (toggleLightButtonText != null)
+        {
+            string state = TerrariumBleController.Instance.GetLightState();
+            toggleLightButtonText.text = state;
+        }
     }
     
     public void ToggleWater()
     {
-        StartCoroutine(ToggleWaterCoroutine());
-    }
-    
-    private IEnumerator ToggleLightCoroutine()
-    {
-        // Check if connected
         if (!TerrariumBleController.Instance.IsConnected)
         {
-            Debug.LogError("Cannot toggle light: BLE not connected");
-            yield break;
+            Debug.LogError("Cannot toggle water: BLE not connected");
+            return;
         }
         
-        // Read current schedules first
-        TerrariumBleController.Instance.ReadSchedules();
+        Debug.Log("Toggling water...");
         
-        // Wait for the read to complete
-        yield return new WaitForSeconds(1.0f);
+        // Use the Instance to call the ToggleWater method - DON'T try to access UUIDs directly!
+        TerrariumBleController.Instance.ToggleWater();
         
-        bool isLightOn = false;
-        bool hasSchedule = false;
-        
-        // Check current light state
-        try
-        {
-            string schedulesJson = TerrariumBleController.Instance._schedulesString;
-            if (!string.IsNullOrEmpty(schedulesJson))
-            {
-                SchedulesResponse data = JsonUtility.FromJson<SchedulesResponse>(schedulesJson);
-                if (data != null && data.light != null)
-                {
-                    // Use the correct property name instead of 'frequency'
-                    // This could be 'type', 'mode', 'scheduleType', etc.
-                    isLightOn = data.light.type == "ALWAYS_ON";  // Replace 'type' with the actual property name
-                    
-                    // Check if there's a real schedule (not ALWAYS_ON or NONE)
-                    hasSchedule = data.light.type != "ALWAYS_ON" && 
-                                  data.light.type != "NONE" &&
-                                  !string.IsNullOrEmpty(data.light.type);  // Replace 'type' with the actual property name
-                    
-                    // Save the current schedule if we're not already in a restoration process
-                    if (hasSchedule && !_isRestoringLight)
-                    {
-                        _savedLightSchedule = JsonUtility.ToJson(data.light);
-                    }
-                }
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Error checking light state: {ex.Message}");
-        }
-        
-        // If there's a real schedule and we're not restoring, ask for confirmation
-        if (hasSchedule && !_isRestoringLight && confirmationDialog != null)
-        {
-            confirmationDialog.SetActive(true);
-            if (confirmationText != null)
-            {
-                confirmationText.text = "This will temporarily override your light schedule. Continue?";
-            }
-            
-            // Set up confirmation buttons
-            if (confirmButton != null)
-            {
-                confirmButton.onClick.RemoveAllListeners();
-                confirmButton.onClick.AddListener(() => {
-                    confirmationDialog.SetActive(false);
-                    ExecuteLightToggle(isLightOn);
-                });
-            }
-            
-            if (cancelButton != null)
-            {
-                cancelButton.onClick.RemoveAllListeners();
-                cancelButton.onClick.AddListener(() => {
-                    confirmationDialog.SetActive(false);
-                });
-            }
-            
-            yield break;
-        }
-        
-        // If we're here, either there's no schedule or the user confirmed
-        ExecuteLightToggle(isLightOn);
-    }
-    
-    private void ExecuteLightToggle(bool isCurrentlyOn)
-    {
-        if (isCurrentlyOn)
-        {
-            Debug.Log("Turning light OFF");
-            SendTestSchedule("LIGHT,NONE,0,0,0");
-            if (toggleLightButtonText != null)
-                toggleLightButtonText.text = "Light: OFF";
-        }
-        else
-        {
-            Debug.Log("Turning light ON");
-            SendTestSchedule("LIGHT,ALWAYS_ON,0,0,0");
-            if (toggleLightButtonText != null)
-                toggleLightButtonText.text = "Light: ON";
-                
-            // Add option to restore original schedule
-            if (!string.IsNullOrEmpty(_savedLightSchedule) && toggleLightButtonText != null)
-            {
-                toggleLightButtonText.text = "Light: ON (tap to restore schedule)";
-                _isRestoringLight = true;
-            }
-        }
+        // Update UI after a short delay
+        StartCoroutine(UpdateToggleTextAfterDelay(toggleWaterButtonText, "Water"));
     }
     
     private IEnumerator ToggleWaterCoroutine()
@@ -458,5 +390,30 @@ public class ScheduleTestHelper : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         
         Debug.Log("Fogger button press command sent");
+    }
+    
+    // Helper coroutine to update toggle button text after a delay
+    private IEnumerator UpdateToggleTextAfterDelay(TextMeshProUGUI buttonText, string deviceName)
+    {
+        if (buttonText == null) yield break;
+        
+        // Wait a moment for the toggle to take effect
+        yield return new WaitForSeconds(0.5f);
+        
+        // Update text based on state
+        buttonText.text = $"{deviceName} toggled";
+        
+        // Wait a bit longer to read back the state
+        yield return new WaitForSeconds(1.0f);
+        
+        // Read state from BLE controller
+        if (deviceName == "Light")
+        {
+            buttonText.text = TerrariumBleController.Instance.GetLightState();
+        }
+        else if (deviceName == "Water") 
+        {
+            buttonText.text = TerrariumBleController.Instance.GetWaterState();
+        }
     }
 }

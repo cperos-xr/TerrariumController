@@ -65,6 +65,10 @@ private:
     void executeTask(int pin, int durationMs, bool& running, unsigned long& offTime);
     bool matchSchedule(const DateTime& now, const Schedule& sch, bool& isSecond);
 
+    bool lightManuallyOn;  // Track if light was manually turned on
+    bool waterManuallyOn;  // Track if water was manually turned on
+    bool foggerManuallyOn; // Track if fogger was manually turned on
+
     ScheduleType parseType(const String& s);
     String scheduleToString(const Schedule& sch, const String& type);
 };

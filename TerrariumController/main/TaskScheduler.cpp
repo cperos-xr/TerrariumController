@@ -12,6 +12,9 @@ TaskScheduler::TaskScheduler(int lp, int wp, int fp)
   , lightOffMillis(0)
   , waterOffMillis(0)
   , foggerOffMillis(0)
+  , lightManuallyOn(false)
+  , waterManuallyOn(false)
+  , foggerManuallyOn(false)
 {}
 
 // String → enum
@@ -106,39 +109,41 @@ void TaskScheduler::parseAndSetSchedule(const String& cmd) {
     saveSchedules();
 }
 
-// Manual toggle implementations - simplified version
+// Manual toggle implementations - with manual flag tracking
 void TaskScheduler::toggleLight() {
     if (lightRunning) {
         digitalWrite(lightPin, LOW);
         lightRunning = false;
+        lightManuallyOn = false;  // Clear manual flag when turning off
         Serial.println("Light manually turned OFF");
     } else {
         digitalWrite(lightPin, HIGH);
         lightRunning = true;
+        lightManuallyOn = true;  // Set manual flag when turning on
         Serial.println("Light manually turned ON");
     }
-    // No override flags - schedule will take over immediately
 }
 
 void TaskScheduler::toggleWater() {
     if (waterRunning) {
         digitalWrite(waterPin, LOW);
         waterRunning = false;
+        waterManuallyOn = false;  // Clear manual flag when turning off
         Serial.println("Water manually turned OFF");
     } else {
         digitalWrite(waterPin, HIGH);
         waterRunning = true;
+        waterManuallyOn = true;  // Set manual flag when turning on
         Serial.println("Water manually turned ON");
     }
-    // No override flags - schedule will take over immediately
 }
 
 void TaskScheduler::toggleFogger() {
     // For fogger, we just press the button - it toggles the state
     pressFoggerButton();
     foggerRunning = !foggerRunning;
+    foggerManuallyOn = foggerRunning;  // Set or clear manual flag based on new state
     Serial.println(foggerRunning ? "Fogger manually turned ON" : "Fogger manually turned OFF");
-    // No override flags - schedule will take over immediately
 }
 
 // Called each loop - now without override checks
@@ -158,6 +163,10 @@ void TaskScheduler::applySchedule(
     unsigned long& offTime,
     const DateTime& now
 ) {
+    // Figure out which device we're controlling to access its manual flag
+    bool& manuallyOn = (pin == lightPin) ? lightManuallyOn :
+                       (pin == waterPin) ? waterManuallyOn : foggerManuallyOn;
+
     if (sch.type == NONE) return;
 
     // ALWAYS_ON
@@ -177,14 +186,15 @@ void TaskScheduler::applySchedule(
         return;
     }
 
-    // turn off when duration elapses
-    if (pin != foggerPin && running && millis() >= offTime) {
+    // turn off when duration elapses, BUT ONLY if not manually turned on
+    if (pin != foggerPin && running && !manuallyOn && millis() >= offTime) {
         digitalWrite(pin, LOW);
         running = false;
     }
 
+    // Only apply scheduled ON if not already manually on
     bool secondInstance = false;
-    if (!running && matchSchedule(now, sch, secondInstance)) {
+    if (!running && !manuallyOn && matchSchedule(now, sch, secondInstance)) {
         int dur = secondInstance ? sch.duration2 : sch.duration1;
         if (pin == foggerPin) {
             pressFoggerButton();
