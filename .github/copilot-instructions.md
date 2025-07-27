@@ -12,14 +12,14 @@ This modular Arduino-based controller manages a self-contained terrarium environ
   - Umbrellas with floating raindrops.
   - Blooming flower with spinning petals.
   - Scrolling personalized message
+- Animations are full-screen effects between info screens for user engagement, but might still require implementation.
 - Scrolling screen for weekly/daily high/low stats.
 - Real-time water and light control using digital pins.
 - Frame timing and display refresh loop maintained separately from sensor reads and actuation logic.
 
 **Optional Features:**
-- Certain Hardware can be added or removed at will, RTC module, additional sensors, etc.
-- RTC is optional, so if it is added think like task scheduling and timekeeping. can automatically activate or deactivate when removed or not detected
-- This means nothing should be coded around RTC being permanently, features that rely on it should check for its presence and adjust accordingly. 
+- Certain Hardware can be added or removed or added like lights, pump and a fogger
+- RTC is required for timekeeping and scheduling.
 - Without the component use backup logic or feature remains inactive
 
 **About the OLED:**
@@ -64,13 +64,6 @@ This modular Arduino-based controller manages a self-contained terrarium environ
 6. **Compact Layout for Small Font:**
    - Use small font for additional data (e.g., month, day, year) if needed, but keep it **simple and readable**.
 
-**File Structure:**
-- `TerrariumController.ino`: Main control loop and mode scheduler.
-- `SensorManager.*`: Sensor read/update logic (AHT25).
-- `DisplayManager.*`: Handles screen setup and rendering logic.
-- `ActuatorControl.*`: Controls GPIO for water and light pumps.
-- `Animations.*`: Fully implemented animation functions (vine, umbrella, bloom, etc.).
-
 **Notes for Development:**
 - Screen is rotated 90 degrees to fit narrow OLED vertically. Layout logic accounts for this.
 - `Adafruit_GFX` + `Adafruit_SSD1306` used for drawing primitives and text.
@@ -114,7 +107,7 @@ The following legacy scripts serve as working examples for functionality that ha
 - Always refer to yourself as my "AI computer buddy"
 - Talk like rick sanchez when explaining things
 
-**Main.ino = Barebones 2.0**
+**Main.ino = New Primary project**
 - Independent program
 - this is a new Barebones 2.0 with no frills or animations just working proof of concept
 - RTC is mandatory in this one as we will always need to keep track of time for the plant care schedule.
@@ -122,6 +115,17 @@ The following legacy scripts serve as working examples for functionality that ha
 - const int PIN_WATER = 3; 
 - We all we do is set water on/off and light on/off (EX: DAILY,10,30,3000)
 - we can change these values with bluetooth
-- borrow what works but keep it simple
+- this is better and replaces the older code found in the TerrariumController subdirectory
 - using serial communication for debugging and status updates
+
+**Fogger integration**
+- Fogger is different than lights and water pump
+- Fogger is activated by a button press and has its own circuit board that drives the fogger
+- We are electronically pressing this button with an npn transistor, so a short pulse will activate the fogger
+- Fogger has 3 modes: 
+  - OFF
+  - ON
+  - Inttermittent
+- Three modes are controlled by a single button, so first press is for on, second press goes to intermittent, third press goes to off, and the cycle repeats
+- Keep this pattern in mind when implementing the fogger control logic
 

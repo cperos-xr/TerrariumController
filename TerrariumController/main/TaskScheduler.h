@@ -54,6 +54,7 @@ public:
     bool getLightState() const { return lightRunning; }
     bool getWaterState() const { return waterRunning; }
     bool getFoggerState() const { return foggerRunning; }
+    bool shouldActivateFogger(const DateTime& now, const Schedule& sch);
 
 private:
     int lightPin, waterPin, foggerPin;

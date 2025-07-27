@@ -148,11 +148,59 @@ void TaskScheduler::toggleFogger() {
 
 // Called each loop - now without override checks
 void TaskScheduler::updateTasks(const DateTime& now) {
-    // No need to check overrides anymore
-    // Apply schedules directly
+    // Light and water handling as before
     applySchedule(lightSchedule, lightPin, lightRunning, lightOffMillis, now);
     applySchedule(waterSchedule, waterPin, waterRunning, waterOffMillis, now);
-    applySchedule(foggerSchedule, foggerPin, foggerRunning, foggerOffMillis, now);
+    
+    // Special handling for fogger - simpler and more direct
+    if (shouldActivateFogger(now, foggerSchedule)) {
+        // Just press the button - guaranteed action when scheduled
+        pressFoggerButton();
+        foggerRunning = true;  // Mark as running
+        Serial.println("Fogger button pressed per schedule");
+    }
+}
+
+// Add this helper method to your TaskScheduler class
+bool TaskScheduler::shouldActivateFogger(const DateTime& now, const Schedule& sch) {
+    static int lastFoggerActivationDay = -1;
+    static int lastFoggerActivationHour = -1;
+    static int lastFoggerActivationMinute = -1;
+    
+    bool activate = false;
+    bool secondInstance = false;
+    
+    // Don't bother with complex logic for NONE or ALWAYS_ON
+    if (sch.type == NONE) return false;
+    if (sch.type == ALWAYS_ON) return !foggerRunning; // Only trigger if not already running
+    
+    // For all other schedule types, use matchSchedule but with more debug info
+    if (matchSchedule(now, sch, secondInstance)) {
+        // Avoid double-triggering by tracking last activation time
+        if (now.day() == lastFoggerActivationDay && 
+            now.hour() == lastFoggerActivationHour && 
+            now.minute() == lastFoggerActivationMinute) {
+            // Already activated this minute
+            return false;
+        }
+        
+        // This is a new activation, record it
+        lastFoggerActivationDay = now.day();
+        lastFoggerActivationHour = now.hour();
+        lastFoggerActivationMinute = now.minute();
+        
+        Serial.println("*******************************");
+        Serial.print("FOGGER SCHEDULED ACTIVATION at ");
+        Serial.print(now.hour());
+        Serial.print(":");
+        Serial.print(now.minute());
+        Serial.println(" - PRESSING BUTTON");
+        Serial.println("*******************************");
+        
+        return true;
+    }
+    
+    return false;
 }
 
 // Core on/off logic
@@ -214,78 +262,86 @@ bool TaskScheduler::matchSchedule(
     const Schedule& sch,
     bool& isSecond
 ) {
+    isSecond = false;
+    
     switch (sch.type) {
-      case DAILY:
-        if (now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = false;
-          return true;
-        }
-        break;
+        case DAILY:
+            // Match if we're exactly at the time OR up to 2 minutes after
+            // This creates a 3-minute window to catch the schedule
+            if ((now.hour() == sch.hour1 && 
+                (now.minute() == sch.minute1 || 
+                 now.minute() == sch.minute1 + 1 || 
+                 now.minute() == sch.minute1 + 2))) {
+                return true;
+            }
+            break;
+            
+        case TWICE_DAILY:
+            if ((now.hour() == sch.hour1 && 
+                (now.minute() == sch.minute1 || 
+                 now.minute() == sch.minute1 + 1 || 
+                 now.minute() == sch.minute1 + 2))) {
+                return true;
+            }
+            if ((now.hour() == sch.hour2 && 
+                (now.minute() == sch.minute2 || 
+                 now.minute() == sch.minute2 + 1 || 
+                 now.minute() == sch.minute2 + 2))) {
+                isSecond = true;
+                return true;
+            }
+            break;
 
-      case TWICE_DAILY:
-        if (now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = false;
-          return true;
-        }
-        if (now.hour() == sch.hour2
-            && now.minute() == sch.minute2) {
-          isSecond = true;
-          return true;
-        }
-        break;
+        case WEEKLY:
+            if (now.dayOfTheWeek() == 0
+                && now.hour() == sch.hour1
+                && now.minute() == sch.minute1) {
+              isSecond = false;
+              return true;
+            }
+            break;
 
-      case WEEKLY:
-        if (now.dayOfTheWeek() == 0
-            && now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = false;
-          return true;
-        }
-        break;
+        case TWICE_WEEKLY:
+            if (now.dayOfTheWeek() == 0
+                && now.hour() == sch.hour1
+                && now.minute() == sch.minute1) {
+              isSecond = false;
+              return true;
+            }
+            if (now.dayOfTheWeek() == 3
+                && now.hour() == sch.hour1
+                && now.minute() == sch.minute1) {
+              isSecond = true;
+              return true;
+            }
+            break;
 
-      case TWICE_WEEKLY:
-        if (now.dayOfTheWeek() == 0
-            && now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = false;
-          return true;
-        }
-        if (now.dayOfTheWeek() == 3
-            && now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = true;
-          return true;
-        }
-        break;
+        case MONTHLY:
+            if (now.day() == 1
+                && now.hour() == sch.hour1
+                && now.minute() == sch.minute1) {
+              isSecond = false;
+              return true;
+            }
+            break;
 
-      case MONTHLY:
-        if (now.day() == 1
-            && now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = false;
-          return true;
-        }
-        break;
+        case TWICE_MONTHLY:
+            if (now.day() == 1
+                && now.hour() == sch.hour1
+                && now.minute() == sch.minute1) {
+              isSecond = false;
+              return true;
+            }
+            if (now.day() == 15
+                && now.hour() == sch.hour1
+                && now.minute() == sch.minute1) {
+              isSecond = true;
+              return true;
+            }
+            break;
 
-      case TWICE_MONTHLY:
-        if (now.day() == 1
-            && now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = false;
-          return true;
-        }
-        if (now.day() == 15
-            && now.hour() == sch.hour1
-            && now.minute() == sch.minute1) {
-          isSecond = true;
-          return true;
-        }
-        break;
-
-      default:
-        break;
+        default:
+            break;
     }
     return false;
 }

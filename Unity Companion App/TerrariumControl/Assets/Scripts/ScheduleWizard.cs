@@ -54,8 +54,8 @@ public class ScheduleWizard : MonoBehaviour
     private int _waterFrequency, _waterHour, _waterMinute, _waterAmPm, _waterDuration;
     private int _waterHour2, _waterMinute2, _waterAmPm2, _waterDuration2;
     
-    private int _foggerFrequency, _foggerHour, _foggerMinute, _foggerAmPm;
-    private int _foggerHour2, _foggerMinute2, _foggerAmPm2;
+    private int _foggerFrequency, _foggerHour, _foggerMinute, _foggerAmPm, _foggerDurationIndex1;
+    private int _foggerHour2, _foggerMinute2, _foggerAmPm2, _foggerDurationIndex2;
     
     // Duration options in seconds - removed 10 and 30 second options
     private int[] _durationValues = new int[] { 
@@ -194,11 +194,11 @@ public class ScheduleWizard : MonoBehaviour
         durationDropdown.transform.parent.gameObject.SetActive(showDuration);
         
         // For fogger page, hide duration settings completely
-        if (_currentPage == 2) // Fogger page
-        {
-            durationDropdown.transform.parent.gameObject.SetActive(false);
-            durationDropdown2.transform.parent.gameObject.SetActive(false);
-        }
+        // if (_currentPage == 2) // Fogger page
+        // {
+        //     durationDropdown.transform.parent.gameObject.SetActive(false);
+        //     durationDropdown2.transform.parent.gameObject.SetActive(false);
+        // }
     }
     
     public void NextPage()
@@ -265,12 +265,12 @@ public class ScheduleWizard : MonoBehaviour
                 
             case 2: // Fogger
                 pageTitle.text = "Fogger Schedule";
-                instructionText.text = "I want my FOGGER to run:\n(Note: Fogger runs for 4 hours each activation)";
+                instructionText.text = "I want my FOGGER to run:";  // Remove the 4-hour note
                 LoadFoggerSettings();
                 
-                // Hide duration dropdowns for fogger
-                durationDropdown.transform.parent.gameObject.SetActive(false);
-                durationDropdown2.transform.parent.gameObject.SetActive(false);
+                // Remove these two lines completely (they're already commented out)
+                // durationDropdown.transform.parent.gameObject.SetActive(false);
+                // durationDropdown2.transform.parent.gameObject.SetActive(false);
                 break;
         }
         
@@ -321,6 +321,7 @@ public class ScheduleWizard : MonoBehaviour
                 _foggerHour = hourDropdown.value;
                 _foggerMinute = minuteDropdown.value;
                 _foggerAmPm = amPmDropdown.value;
+                _foggerDurationIndex1 = durationDropdown.value;  // Add this line
                 
                 // Save second time settings if applicable
                 if (secondTimeContainer.activeSelf)
@@ -328,6 +329,7 @@ public class ScheduleWizard : MonoBehaviour
                     _foggerHour2 = hourDropdown2.value;
                     _foggerMinute2 = minuteDropdown2.value;
                     _foggerAmPm2 = amPmDropdown2.value;
+                    _foggerDurationIndex2 = durationDropdown2.value;  // Add this line
                 }
                 break;
         }
@@ -391,13 +393,13 @@ public class ScheduleWizard : MonoBehaviour
                                          _waterAmPm2, _waterDuration2);
         
         foggerSummary.text = FormatSummary("Fogger", _foggerFrequency, _foggerHour, _foggerMinute, 
-                                          _foggerAmPm, -1, _foggerHour2, _foggerMinute2, 
-                                          _foggerAmPm2, -1, true);
+                                          _foggerAmPm, _foggerDurationIndex1, _foggerHour2, _foggerMinute2, 
+                                          _foggerAmPm2, _foggerDurationIndex2);  // Remove the true parameter
     }
     
     private string FormatSummary(string deviceName, int frequency, int hour1, int minute1, 
                                 int amPm1, int duration1, int hour2, int minute2, 
-                                int amPm2, int duration2, bool isFogger = false)
+                                int amPm2, int duration2)
     {
         string frequencyStr = GetFrequencyString(frequency);
         
@@ -427,25 +429,11 @@ public class ScheduleWizard : MonoBehaviour
             
             string timeStr2 = $"{displayHour2}:{minuteStr2} {amPmStr2}";
             
-            if (!isFogger)
-            {
-                secondTimeStr = $" and {timeStr2} for {_durationLabels[duration2]}";
-            }
-            else
-            {
-                secondTimeStr = $" and {timeStr2} (4 hours each)";
-            }
+            secondTimeStr = $" and {timeStr2} for {_durationLabels[duration2]}";
         }
         
         // Add duration for non-fogger devices
-        if (!isFogger)
-        {
-            return $"{deviceName}: {frequencyStr} at {timeStr1} for {_durationLabels[duration1]}{secondTimeStr}";
-        }
-        else
-        {
-            return $"{deviceName}: {frequencyStr} at {timeStr1} (runs for 4 hours){secondTimeStr}";
-        }
+        return $"{deviceName}: {frequencyStr} at {timeStr1} for {_durationLabels[duration1]}{secondTimeStr}";
     }
     
     private string GetFrequencyString(int frequency)
@@ -529,11 +517,11 @@ public class ScheduleWizard : MonoBehaviour
             _foggerHour,
             _foggerMinute,
             _foggerAmPm,
-            60, // Placeholder for fogger
+            _foggerDurationIndex1,  // Use actual selected duration
             _foggerHour2,
             _foggerMinute2,
             _foggerAmPm2,
-            60  // Placeholder for fogger
+            _foggerDurationIndex2   // Use actual selected duration
         ));
         
         // All done
